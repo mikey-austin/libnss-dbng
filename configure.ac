@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([libnss-db-ng], [0.1.0], [mikey@jackiemclean.net])
+AC_INIT([libnss-dbng], [0.1.0], [mikey@jackiemclean.net])
 AM_INIT_AUTOMAKE
 LT_INIT([dlopen])
 AC_CONFIG_SRCDIR([lib/passwd.c])
@@ -16,7 +16,14 @@ AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h syslog.h unistd.h])
 
 AC_ARG_VAR([DEFAULT_BASE], [default base for database files])
 if test -z ${DEFAULT_BASE}; then
-    DEFAULT_BASE="${localstatedir}/db-ng"
+    DEFAULT_BASE="${localstatedir}/dbng"
+fi
+
+AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [build the library in debug mode])],
+    [debug=yes], [debug=no])
+
+if test "x${debug}" = xyes; then
+    AC_DEFINE([DEBUG], [1], [Debug mode])
 fi
 
 have_bdb=no
