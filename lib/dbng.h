@@ -22,31 +22,41 @@
 
 #define DBNG_RO 0
 #define DBNG_Rw 1
+#define DBNG_PERMS 0600
 
-enum TYPE {
-    PASSWD,
-    SHADOW,
-    GROUP
-};
-
-typedef struct DBNG DBNG;
-struct DBNG {
-    enum TYPE type;
+typedef struct DBNG {
     DB_ENV *env;
-    DB *db_main;
-    DB *db_sec;
+    DB *pri;
+    DB *sec;
     DB_TXN *txn;
-};
+} DBNG;
 
-struct DBNG_REC {
-    char *key;
-    char *value;
-};
+/**
+ *
+ */
+extern DBNG *dbng_create(const char *pri,
+                         const char *sec,
+                         int (*key_creator)(DB *, DBT *, DBT *, DBT *),
+                         int flags);
 
-extern DBNG *dbng_create(enum TYPE type);
+/**
+ *
+ */
 extern void dbng_free(DBNG **handle);
+
+/**
+ *
+ */
 extern int dbng_insert(DBNG *handle, const char *key, const char *value);
+
+/**
+ *
+ */
+extern int dbng_get(DBNG *handle, const char *key);
+
+/**
+ *
+ */
 extern int dbng_delete(DBNG *handle, const char *key);
-extern int dbng_fetch_all(DBNG *handle, struct DBNG_REC **values, int count);
 
 #endif
