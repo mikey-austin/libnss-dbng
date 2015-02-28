@@ -18,6 +18,18 @@ extern void
 }
 
 extern void
+*xcalloc(size_t nmemb, size_t size)
+{
+    void *res = NULL;
+
+    res = calloc(nmemb, size);
+    if(res == NULL)
+        err(1, "calloc");
+
+    return res;
+}
+
+extern void
 xfree(void **p)
 {
     if(*p != NULL)

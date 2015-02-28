@@ -12,6 +12,7 @@
 #include <err.h>
 
 extern void *xmalloc(size_t size);
+extern void *xcalloc(size_t nmemb, size_t size);
 extern void xfree(void **p);
 
 #endif
