@@ -87,7 +87,18 @@ service_get_rec(SERVICE *service, KEY *key, REC *rec)
 extern int
 service_set_rec(SERVICE *service, KEY *key, REC *rec)
 {
-    return 0;
+    int ret;
+    DBT dbkey, dbrec;
+    DB *db = service->db->pri; /* Secondary database updated automatically. */
+
+    service->pack_key(service, key, &dbkey);
+    service->pack_rec(service, rec, &dbrec);
+    ret = db->put(db, service->db->txn, &dbkey, &dbrec, 0);
+
+    free(dbkey.data);
+    free(dbrec.data);
+
+    return ret;
 }
 
 extern int
