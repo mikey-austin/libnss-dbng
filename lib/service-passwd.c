@@ -9,37 +9,68 @@
 
 #include "service-passwd.h"
 
-static void pack_key(PASSWD_KEY *key, DBT *dbkey);
-static void pack_rec(PASSWD_REC *rec, DBT *dbrec);
-static void unpack_key(PASSWD_KEY *key, DBT *dbkey);
-static void unpack_rec(PASSWD_REC *rec, DBT *dbrec);
+static void pack_key(PASSWD_KEY *, DBT *);
+static void pack_rec(PASSWD_REC *, DBT *);
+static void unpack_key(PASSWD_KEY *, DBT *);
+static void unpack_rec(PASSWD_REC *, DBT *);
+static size_t rec_size(SERVICE *, REC *);
+static size_t key_size(SERVICE *, KEY *);
 
 extern SERVICE
 *service_passwd_create(void)
 {
-    return NULL;
+    SERVICE *service = NULL;
+
+    service = xmalloc(sizeof(*service));
+    service->type = PASSWD;
+    service->rec_size = rec_size;
+    service->key_size = key_size;
+
+    return (SERVICE *) service;
+}
+
+static size_t
+rec_size(SERVICE *service, REC *rec)
+{
+    PASSWD_REC *prec = (PASSWD_REC *) rec;
+
+    return sizeof(prec->uid)
+        + sizeof(prec->gid)
+        + strlen(prec->name) + 1
+        + strlen(prec->passwd) + 1
+        + strlen(prec->gecos) + 1
+        + strlen(prec->shell) + 1
+        + strlen(prec->homedir) + 1;
+}
+
+static size_t
+key_size(SERVICE *service, KEY *key)
+{
+    PASSWD_KEY *pkey = (PASSWD_KEY *) key;
+
+    return sizeof(pkey->base.type)
+        + (pkey->base.type == PRI
+           ? (strlen(pkey->data.pri) + 1)
+           : sizeof(pkey->data.sec));
 }
 
 static void
 pack_key(PASSWD_KEY *key, DBT *dbkey)
 {
     char *buf = NULL, *s;
-    int len, slen = 0;
+    int len;
 
-    len = sizeof(key->base.type)
-        + (key->base.type == PRI
-           ? (slen = (strlen(key->data.pri) + 1))
-           : (slen = sizeof(key->data.sec)));
+    len = key_size(NULL, (KEY *) key);
     buf = xcalloc(len, sizeof(char));
     memcpy(buf, &(key->base.type), sizeof(key->base.type));
 
     switch(key->base.type) {
     case PRI:
-        memcpy(buf + sizeof(key->base.type), key->data.pri, slen);
+        memcpy(buf + sizeof(key->base.type), key->data.pri, strlen(key->data.pri) + 1);
         break;
 
     case SEC:
-        memcpy(buf + sizeof(key->base.type), &key->data.sec, slen);
+        memcpy(buf + sizeof(key->base.type), &key->data.sec, sizeof(key->data.sec));
         break;
     }
 
@@ -54,13 +85,7 @@ pack_rec(PASSWD_REC *rec, DBT *dbrec)
     char *buf = NULL, *s;
     int len, slen = 0;
 
-    len = sizeof(rec->uid)
-        + sizeof(rec->gid)
-        + strlen(rec->name) + 1
-        + strlen(rec->passwd) + 1
-        + strlen(rec->gecos) + 1
-        + strlen(rec->shell) + 1
-        + strlen(rec->homedir) + 1;
+    len = rec_size(NULL, (REC *) rec);
     buf = xcalloc(sizeof(char), len);
 
     s = buf;
