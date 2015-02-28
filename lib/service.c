@@ -5,12 +5,13 @@
  * @date 2015
  */
 
-#include "service.h"
-#include "utils.h"
+#include "dbng/service.h"
+#include "dbng/utils.h"
+/*
 #include "service-passwd.h"
 #include "service-shadow.h"
 #include "service-group.h"
-
+*/
 /**
  *
  */
@@ -49,7 +50,7 @@ extern SERVICE
     return service;
 
 err:
-    xfree(&service);
+    xfree((void **) &service);
     return NULL;
 }
 
@@ -63,5 +64,5 @@ extern void service_free(SERVICE **service)
 
     (*service)->cleanup(*service);
     dbng_free(&(*service)->db);
-    xfree(service);
+    xfree((void **) service);
 }

@@ -8,6 +8,8 @@
 #ifndef DBNG_H
 #define DBNG_H
 
+#include "../nss/nss-dbng.h"
+
 #ifdef HAVE_DB5_DB_H
 #  include <db5/db.h>
 #endif
@@ -17,8 +19,6 @@
 #ifdef HAVE_DB_H
 #  include <db.h>
 #endif
-
-#include "nss-dbng.h"
 
 #define DBNG_RO 0
 #define DBNG_Rw 1
@@ -36,7 +36,7 @@ typedef struct DBNG {
  */
 extern DBNG *dbng_create(const char *pri,
                          const char *sec,
-                         int (*key_creator)(DB *, DBT *, DBT *, DBT *),
+                         int (*key_creator)(DB *, const DBT *, const DBT *, DBT *),
                          int flags);
 
 /**
@@ -52,7 +52,7 @@ extern int dbng_insert(DBNG *handle, const char *key, const char *value);
 /**
  *
  */
-extern int dbng_get(DBNG *handle, const char *key);
+extern char *dbng_get(DBNG *handle, const char *key);
 
 /**
  *

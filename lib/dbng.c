@@ -5,19 +5,22 @@
  * @date 2015
  */
 
-#include "dbng.h"
-#include "utils.h"
+#include "dbng/dbng.h"
+#include "dbng/utils.h"
 
 extern DBNG
 *dbng_create(const char *pri, const char *sec,
-             int (*key_creator)(DB *, DBT *, DBT *, DBT *),
+             int (*key_creator)(DB *, const DBT *, const DBT *,DBT *),
              int flags)
 {
     DBNG *handle = NULL;
     int db_flags, ret;
 
     handle = xmalloc(sizeof(*handle));
-    handle->env = handle->pri = handle->db_sec = handle->txn = NULL;
+    handle->env = NULL;
+    handle->pri = NULL;
+    handle->sec = NULL;
+    handle->txn = NULL;
 
     /* Open & setup environment. */
     db_flags = DB_CREATE
@@ -74,7 +77,7 @@ extern DBNG
                                 db_flags, DBNG_PERMS);
         if(ret != 0) {
             warnx("db open (%s/%s) failed: %s", DEFAULT_BASE, sec, db_strerror(ret));
-            goto cleanup;
+            goto err;
         }
 
         /* Associate the secondary with the primary. */
@@ -88,7 +91,7 @@ err:
         handle->pri->close(handle->pri, 0);
     if(handle->env != NULL)
         handle->env->close(handle->env, 0);
-    xfree(&handle);
+    xfree((void **) &handle);
     return NULL;
 }
 
@@ -97,12 +100,12 @@ dbng_free(DBNG **handle)
 {
     if(*handle != NULL) {
         if((*handle)->sec != NULL)
-            handle->sec->close(handle->sec, 0);
+            (*handle)->sec->close((*handle)->sec, 0);
         if((*handle)->pri != NULL)
-            handle->pri->close(handle->pri, 0);
+            (*handle)->pri->close((*handle)->pri, 0);
         if((*handle)->env != NULL)
-            handle->env->close(handle->env, 0);
-        xfree(handle);
+            (*handle)->env->close((*handle)->env, 0);
+        xfree((void **) handle);
     }
 }
 

@@ -1,2 +1,2 @@
-SUBDIRS = lib
+SUBDIRS = lib nss
 ACLOCAL_AMFLAGS = -I m4

@@ -8,7 +8,7 @@
 #ifndef SERVICE_H
 #define SERVICE_H
 
-#include "dbng.h"
+#include "dbng/dbng.h"
 
 enum TYPE {
     PASSWD,
@@ -20,6 +20,8 @@ typedef struct SERVICE {
     char *pri;
     char *sec;
     DBNG *db;
+    int (*key_creator)(DB *, const DBT *, const DBT *, DBT *);
+    void (*cleanup)(struct SERVICE *);
     enum TYPE type;
 } SERVICE;
 

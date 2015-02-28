@@ -19,6 +19,7 @@ configure
 install-sh
 test-driver
 lib/.deps/*
+nss/.deps/*
 aclocal.m4
 missing
 depcomp

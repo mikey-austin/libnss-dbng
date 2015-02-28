@@ -2,8 +2,8 @@ AC_PREREQ([2.68])
 AC_INIT([libnss-dbng], [0.1.0], [mikey@jackiemclean.net])
 AM_INIT_AUTOMAKE
 LT_INIT([dlopen])
-AC_CONFIG_SRCDIR([lib/passwd.c])
-AC_CONFIG_HEADERS([lib/config.h])
+AC_CONFIG_SRCDIR([lib/dbng.c])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
@@ -38,7 +38,7 @@ else
     AC_MSG_FAILURE([libdb is required])
 fi
 
-AC_CHECK_FUNCS([strdup strerror strncasecmp strnlen])
-AC_CONFIG_FILES([Makefile lib/Makefile])
+AC_CHECK_FUNCS([strerror])
+AC_CONFIG_FILES([Makefile lib/Makefile nss/Makefile])
 
 AC_OUTPUT
