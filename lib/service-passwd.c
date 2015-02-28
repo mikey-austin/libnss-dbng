@@ -9,10 +9,16 @@
 
 #include "service-passwd.h"
 
-static void pack_key(PASSWD_KEY *, DBT *);
-static void pack_rec(PASSWD_REC *, DBT *);
-static void unpack_key(PASSWD_KEY *, DBT *);
-static void unpack_rec(PASSWD_REC *, DBT *);
+static void pack_key(const PASSWD_KEY *, DBT *);
+static void pack_rec(const PASSWD_REC *, DBT *);
+static void unpack_key(PASSWD_KEY *, const DBT *);
+static void unpack_rec(PASSWD_REC *, const DBT *);
+static int key_creator(DB *, const DBT *, const DBT *, DBT *);
+static void cleanup(SERVICE *);
+static REC *get(SERVICE *, KEY *);
+static REC *next(SERVICE *);
+static int insert(SERVICE *, KEY *, REC *);
+static void delete(SERVICE *, KEY *);
 static size_t rec_size(SERVICE *, REC *);
 static size_t key_size(SERVICE *, KEY *);
 
@@ -27,6 +33,50 @@ extern SERVICE
     service->key_size = key_size;
 
     return (SERVICE *) service;
+}
+
+static int
+key_creator(DB *dbp, const DBT *pkey, const DBT *pdata, DBT *skey)
+{
+    PASSWD_KEY key;
+    PASSWD_REC rec;
+
+    /* Create the secondary index on the uid. */
+    unpack_rec(&rec, pdata);
+    key.base.type = SEC;
+    key.data.sec = rec.uid;
+    pack_key(&key, skey);
+
+    return 0;
+}
+
+static void
+cleanup(SERVICE *service)
+{
+    /* NOOP. */
+}
+
+static REC
+*get(SERVICE *service, KEY *key)
+{
+    return NULL;
+}
+
+static REC
+*next(SERVICE *service)
+{
+    return NULL;
+}
+
+static int
+insert(SERVICE *service, KEY *key, REC *rec)
+{
+    return -1;
+}
+
+static void
+delete(SERVICE *service, KEY *key)
+{
 }
 
 static size_t
@@ -55,7 +105,7 @@ key_size(SERVICE *service, KEY *key)
 }
 
 static void
-pack_key(PASSWD_KEY *key, DBT *dbkey)
+pack_key(const PASSWD_KEY *key, DBT *dbkey)
 {
     char *buf = NULL, *s;
     int len;
@@ -74,13 +124,14 @@ pack_key(PASSWD_KEY *key, DBT *dbkey)
         break;
     }
 
+    dbkey->flags = DB_DBT_APPMALLOC;
     memset(dbkey, 0, sizeof(*dbkey));
     dbkey->data = buf;
     dbkey->size = len;
 }
 
 static void
-pack_rec(PASSWD_REC *rec, DBT *dbrec)
+pack_rec(const PASSWD_REC *rec, DBT *dbrec)
 {
     char *buf = NULL, *s;
     int len, slen = 0;
@@ -110,13 +161,14 @@ pack_rec(PASSWD_REC *rec, DBT *dbrec)
     memcpy(s, rec->homedir, (slen = (strlen(rec->homedir) + 1)));
     s += slen;
 
+    dbrec->flags = DB_DBT_APPMALLOC;
     memset(dbrec, 0, sizeof(*dbrec));
     dbrec->data = buf;
     dbrec->size = len;
 }
 
 static void
-unpack_key(PASSWD_KEY *key, DBT *dbkey)
+unpack_key(PASSWD_KEY *key, const DBT *dbkey)
 {
     char *buf = (char *) dbkey->data;
 
@@ -136,7 +188,7 @@ unpack_key(PASSWD_KEY *key, DBT *dbkey)
 }
 
 static void
-unpack_rec(PASSWD_REC *rec, DBT *dbrec)
+unpack_rec(PASSWD_REC *rec, const DBT *dbrec)
 {
     char *buf = (char *) dbrec->data;
 
