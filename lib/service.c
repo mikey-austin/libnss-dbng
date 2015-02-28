@@ -22,14 +22,6 @@ extern SERVICE
         service = service_passwd_create();
         break;
 
-    case SHADOW:
-        service = service_shadow_create();
-        break;
-
-    case GROUP:
-        service = service_group_create();
-        break;
-
     default:
         warnx("unknown service type");
         goto err;
@@ -94,7 +86,6 @@ service_set_rec(SERVICE *service, KEY *key, REC *rec)
     service->pack_key(service, key, &dbkey);
     service->pack_rec(service, rec, &dbrec);
     ret = db->put(db, service->db->txn, &dbkey, &dbrec, 0);
-
     xfree((void **) &dbkey.data);
     xfree((void **) &dbrec.data);
 
@@ -102,13 +93,22 @@ service_set_rec(SERVICE *service, KEY *key, REC *rec)
 }
 
 extern int
-service_next_rec(SERVICE *service, KEY *key, REC *rec)
+service_delete_rec(SERVICE *service, KEY *key)
 {
-    return 0;
+    int ret;
+    DBT dbkey;
+    DB *db = service->db->pri; /* Secondary database updated automatically. */
+
+    service->pack_key(service, key, &dbkey);
+    ret = db->del(db, service->db->txn, &dbkey, 0);
+    xfree((void **) &dbkey.data);
+
+    return ret;
 }
 
 extern int
-service_delete_rec(SERVICE *service, KEY *key)
+service_next_rec(SERVICE *service, KEY *key, REC *rec)
 {
+    /* Not yet implemented. */
     return 0;
 }
