@@ -55,6 +55,7 @@ key_creator(DB *dbp, const DBT *pkey, const DBT *pdata, DBT *skey)
     key.base.type = SEC;
     key.data.sec = rec.uid;
     pack_key(NULL, (KEY *) &key, skey);
+    skey->flags = DB_DBT_APPMALLOC;
 
     return 0;
 }
