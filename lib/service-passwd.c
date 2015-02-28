@@ -9,18 +9,13 @@
 
 #include "service-passwd.h"
 
-static void pack_key(const PASSWD_KEY *, DBT *);
-static void pack_rec(const PASSWD_REC *, DBT *);
-static void unpack_key(PASSWD_KEY *, const DBT *);
-static void unpack_rec(PASSWD_REC *, const DBT *);
+static void pack_key(SERVICE *, const KEY *, DBT *);
+static void pack_rec(SERVICE *, const REC *, DBT *);
+static void unpack_key(SERVICE *, KEY *, const DBT *);
+static void unpack_rec(SERVICE *, REC *, const DBT *);
 static int key_creator(DB *, const DBT *, const DBT *, DBT *);
-static void cleanup(SERVICE *);
-static int get(SERVICE *, KEY *, REC *);
-static int next(SERVICE *, KEY *, REC *);
-static int insert(SERVICE *, KEY *, REC *);
-static void delete(SERVICE *, KEY *);
-static size_t rec_size(SERVICE *, REC *);
-static size_t key_size(SERVICE *, KEY *);
+static size_t rec_size(SERVICE *, const REC *);
+static size_t key_size(SERVICE *, const KEY *);
 
 extern SERVICE
 *service_passwd_create(void)
@@ -29,8 +24,22 @@ extern SERVICE
 
     service = xmalloc(sizeof(*service));
     service->type = PASSWD;
+
+    /* Set implemented functions. */
+    service->key_creator = key_creator;
+    service->pack_key = pack_key;
+    service->unpack_key = unpack_key;
+    service->pack_rec = pack_rec;
+    service->unpack_rec = unpack_rec;
     service->rec_size = rec_size;
     service->key_size = key_size;
+    service->cleanup = NULL;
+
+    /* Set inherited functions. */
+    service->get = service_get_rec;
+    service->set = service_set_rec;
+    service->next = service_next_rec;
+    service->delete = service_delete_rec;
 
     return (SERVICE *) service;
 }
@@ -42,62 +51,16 @@ key_creator(DB *dbp, const DBT *pkey, const DBT *pdata, DBT *skey)
     PASSWD_REC rec;
 
     /* Create the secondary index on the uid. */
-    unpack_rec(&rec, pdata);
+    unpack_rec(NULL, (REC *) &rec, pdata);
     key.base.type = SEC;
     key.data.sec = rec.uid;
-    pack_key(&key, skey);
+    pack_key(NULL, (KEY *) &key, skey);
 
     return 0;
-}
-
-static void
-cleanup(SERVICE *service)
-{
-    /* NOOP. */
-}
-
-static int
-get(SERVICE *service, KEY *key, REC *rec)
-{
-    int ret;
-    PASSWD_REC *prec = (PASSWD_REC *) rec;
-    PASSWD_KEY *pkey = (PASSWD_KEY *) key;
-    DBT dbkey, dbval;
-    DB *db = (pkey->base.type == PRI
-              ? service->db->pri : service->db->sec);
-
-    pack_key(pkey, &dbkey);
-    memset(&dbval, 0, sizeof(dbval));
-
-    ret = db->get(db, service->db->txn, &dbkey, &dbval, 0);
-    if(ret == 0)
-        unpack_rec(prec, &dbval);
-
-    /* Cleanup packed key data. */
-    free(dbkey.data);
-
-    return ret;
-}
-
-static int
-next(SERVICE *service, KEY *key, REC *rec)
-{
-    return 0;
-}
-
-static int
-insert(SERVICE *service, KEY *key, REC *rec)
-{
-    return -1;
-}
-
-static void
-delete(SERVICE *service, KEY *key)
-{
 }
 
 static size_t
-rec_size(SERVICE *service, REC *rec)
+rec_size(SERVICE *service, const REC *rec)
 {
     PASSWD_REC *prec = (PASSWD_REC *) rec;
 
@@ -111,7 +74,7 @@ rec_size(SERVICE *service, REC *rec)
 }
 
 static size_t
-key_size(SERVICE *service, KEY *key)
+key_size(SERVICE *service, const KEY *key)
 {
     PASSWD_KEY *pkey = (PASSWD_KEY *) key;
 
@@ -122,22 +85,23 @@ key_size(SERVICE *service, KEY *key)
 }
 
 static void
-pack_key(const PASSWD_KEY *key, DBT *dbkey)
+pack_key(SERVICE *service, const KEY *key, DBT *dbkey)
 {
+    PASSWD_KEY *pkey = (PASSWD_KEY *) key;
     char *buf = NULL, *s;
     int len;
 
-    len = key_size(NULL, (KEY *) key);
+    len = key_size(NULL, key);
     buf = xcalloc(len, sizeof(char));
-    memcpy(buf, &(key->base.type), sizeof(key->base.type));
+    memcpy(buf, &(pkey->base.type), sizeof(pkey->base.type));
 
-    switch(key->base.type) {
+    switch(pkey->base.type) {
     case PRI:
-        memcpy(buf + sizeof(key->base.type), key->data.pri, strlen(key->data.pri) + 1);
+        memcpy(buf + sizeof(pkey->base.type), pkey->data.pri, strlen(pkey->data.pri) + 1);
         break;
 
     case SEC:
-        memcpy(buf + sizeof(key->base.type), &key->data.sec, sizeof(key->data.sec));
+        memcpy(buf + sizeof(pkey->base.type), &pkey->data.sec, sizeof(pkey->data.sec));
         break;
     }
 
@@ -147,34 +111,35 @@ pack_key(const PASSWD_KEY *key, DBT *dbkey)
 }
 
 static void
-pack_rec(const PASSWD_REC *rec, DBT *dbrec)
+pack_rec(SERVICE *service, const REC *rec, DBT *dbrec)
 {
+    PASSWD_REC *prec = (PASSWD_REC *) rec;
     char *buf = NULL, *s;
     int len, slen = 0;
 
-    len = rec_size(NULL, (REC *) rec);
+    len = rec_size(NULL, rec);
     buf = xcalloc(sizeof(char), len);
 
     s = buf;
-    memcpy(s, &rec->uid, (slen = sizeof(rec->uid)));
+    memcpy(s, &prec->uid, (slen = sizeof(prec->uid)));
     s += slen;
 
-    memcpy(s, &rec->gid, (slen = sizeof(rec->gid)));
+    memcpy(s, &prec->gid, (slen = sizeof(prec->gid)));
     s += slen;
 
-    memcpy(s, rec->name, (slen = (strlen(rec->name) + 1)));
+    memcpy(s, prec->name, (slen = (strlen(prec->name) + 1)));
     s += slen;
 
-    memcpy(s, rec->passwd, (slen = (strlen(rec->passwd) + 1)));
+    memcpy(s, prec->passwd, (slen = (strlen(prec->passwd) + 1)));
     s += slen;
 
-    memcpy(s, rec->gecos, (slen = (strlen(rec->gecos) + 1)));
+    memcpy(s, prec->gecos, (slen = (strlen(prec->gecos) + 1)));
     s += slen;
 
-    memcpy(s, rec->shell, (slen = (strlen(rec->shell) + 1)));
+    memcpy(s, prec->shell, (slen = (strlen(prec->shell) + 1)));
     s += slen;
 
-    memcpy(s, rec->homedir, (slen = (strlen(rec->homedir) + 1)));
+    memcpy(s, prec->homedir, (slen = (strlen(prec->homedir) + 1)));
     s += slen;
 
     memset(dbrec, 0, sizeof(*dbrec));
@@ -183,51 +148,53 @@ pack_rec(const PASSWD_REC *rec, DBT *dbrec)
 }
 
 static void
-unpack_key(PASSWD_KEY *key, const DBT *dbkey)
+unpack_key(SERVICE *service, KEY *key, const DBT *dbkey)
 {
+    PASSWD_KEY *pkey = (PASSWD_KEY *) key;
     char *buf = (char *) dbkey->data;
 
-    memset(key, 0, sizeof(*key));
-    key->base.type = *((enum KEY_TYPE *) buf);
-    buf += sizeof(key->base.type);
+    memset(pkey, 0, sizeof(*pkey));
+    pkey->base.type = *((enum KEY_TYPE *) buf);
+    buf += sizeof(pkey->base.type);
 
-   switch(key->base.type) {
+   switch(pkey->base.type) {
     case PRI:
-        key->data.pri = buf;
+        pkey->data.pri = buf;
         break;
 
     case SEC:
-        memcpy(&key->data.sec, buf, sizeof(key->data.sec));
+        memcpy(&pkey->data.sec, buf, sizeof(pkey->data.sec));
         break;
     }
 }
 
 static void
-unpack_rec(PASSWD_REC *rec, const DBT *dbrec)
+unpack_rec(SERVICE *service, REC *rec, const DBT *dbrec)
 {
+    PASSWD_REC *prec = (PASSWD_REC *) rec;
     char *buf = (char *) dbrec->data;
 
-    memset(rec, 0, sizeof(*rec));
-    rec->base.type = PASSWD;
+    memset(prec, 0, sizeof(*prec));
+    prec->base.type = PASSWD;
 
-    memcpy(&rec->uid, buf, sizeof(rec->uid));
-    buf += sizeof(rec->uid);
+    memcpy(&prec->uid, buf, sizeof(prec->uid));
+    buf += sizeof(prec->uid);
 
-    memcpy(&rec->gid, buf, sizeof(rec->gid));
-    buf += sizeof(rec->gid);
+    memcpy(&prec->gid, buf, sizeof(prec->gid));
+    buf += sizeof(prec->gid);
 
-    rec->name = buf;
-    buf += strlen(rec->name) + 1;
+    prec->name = buf;
+    buf += strlen(prec->name) + 1;
 
-    rec->passwd = buf;
-    buf += strlen(rec->passwd) + 1;
+    prec->passwd = buf;
+    buf += strlen(prec->passwd) + 1;
 
-    rec->gecos = buf;
-    buf += strlen(rec->gecos) + 1;
+    prec->gecos = buf;
+    buf += strlen(prec->gecos) + 1;
 
-    rec->shell = buf;
-    buf += strlen(rec->shell) + 1;
+    prec->shell = buf;
+    buf += strlen(prec->shell) + 1;
 
-    rec->homedir = buf;
-    buf += strlen(rec->homedir) + 1;
+    prec->homedir = buf;
+    buf += strlen(prec->homedir) + 1;
 }

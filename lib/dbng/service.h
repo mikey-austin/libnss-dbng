@@ -40,10 +40,14 @@ struct SERVICE {
     void (*cleanup)(SERVICE *);
     int (*get)(SERVICE *, KEY *, REC *);
     int (*next)(SERVICE *, KEY *, REC *);
-    int (*insert)(SERVICE *, KEY *, REC *);
-    void (*delete)(SERVICE *, KEY *);
-    size_t (*rec_size)(SERVICE *, REC *);
-    size_t (*key_size)(SERVICE *, KEY *);
+    int (*set)(SERVICE *, KEY *, REC *);
+    int (*delete)(SERVICE *, KEY *);
+    size_t (*rec_size)(SERVICE *, const REC *);
+    size_t (*key_size)(SERVICE *, const KEY *);
+    void (*pack_key)(SERVICE *, const KEY *, DBT *);
+    void (*pack_rec)(SERVICE *, const REC *, DBT *);
+    void (*unpack_key)(SERVICE *, KEY *, const DBT *);
+    void (*unpack_rec)(SERVICE *, REC *, const DBT *);
 
     enum TYPE type;
 };
@@ -57,5 +61,25 @@ extern SERVICE *service_create(enum TYPE type, int flags);
  *
  */
 extern void service_free(SERVICE **service);
+
+/**
+ *
+ */
+extern int service_get_rec(SERVICE *service, KEY *key, REC *rec);
+
+/**
+ *
+ */
+extern int service_set_rec(SERVICE *service, KEY *key, REC *rec);
+
+/**
+ *
+ */
+extern int service_next_rec(SERVICE *service, KEY *key, REC *rec);
+
+/**
+ *
+ */
+extern int service_delete_rec(SERVICE *service, KEY *key);
 
 #endif
