@@ -15,8 +15,8 @@ static void unpack_key(PASSWD_KEY *, const DBT *);
 static void unpack_rec(PASSWD_REC *, const DBT *);
 static int key_creator(DB *, const DBT *, const DBT *, DBT *);
 static void cleanup(SERVICE *);
-static REC *get(SERVICE *, KEY *);
-static REC *next(SERVICE *);
+static int get(SERVICE *, KEY *, REC *);
+static int next(SERVICE *, KEY *, REC *);
 static int insert(SERVICE *, KEY *, REC *);
 static void delete(SERVICE *, KEY *);
 static size_t rec_size(SERVICE *, REC *);
@@ -56,16 +56,33 @@ cleanup(SERVICE *service)
     /* NOOP. */
 }
 
-static REC
-*get(SERVICE *service, KEY *key)
+static int
+get(SERVICE *service, KEY *key, REC *rec)
 {
-    return NULL;
+    int ret;
+    PASSWD_REC *prec = (PASSWD_REC *) rec;
+    PASSWD_KEY *pkey = (PASSWD_KEY *) key;
+    DBT dbkey, dbval;
+    DB *db = (pkey->base.type == PRI
+              ? service->db->pri : service->db->sec);
+
+    pack_key(pkey, &dbkey);
+    memset(&dbval, 0, sizeof(dbval));
+
+    ret = db->get(db, service->db->txn, &dbkey, &dbval, 0);
+    if(ret == 0)
+        unpack_rec(prec, &dbval);
+
+    /* Cleanup packed key data. */
+    free(dbkey.data);
+
+    return ret;
 }
 
-static REC
-*next(SERVICE *service)
+static int
+next(SERVICE *service, KEY *key, REC *rec)
 {
-    return NULL;
+    return 0;
 }
 
 static int
@@ -124,7 +141,6 @@ pack_key(const PASSWD_KEY *key, DBT *dbkey)
         break;
     }
 
-    dbkey->flags = DB_DBT_APPMALLOC;
     memset(dbkey, 0, sizeof(*dbkey));
     dbkey->data = buf;
     dbkey->size = len;
@@ -161,7 +177,6 @@ pack_rec(const PASSWD_REC *rec, DBT *dbrec)
     memcpy(s, rec->homedir, (slen = (strlen(rec->homedir) + 1)));
     s += slen;
 
-    dbrec->flags = DB_DBT_APPMALLOC;
     memset(dbrec, 0, sizeof(*dbrec));
     dbrec->data = buf;
     dbrec->size = len;

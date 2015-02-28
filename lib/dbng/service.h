@@ -38,8 +38,8 @@ struct SERVICE {
     /* Callback to update secondary database. */
     int (*key_creator)(DB *, const DBT *, const DBT *, DBT *);
     void (*cleanup)(SERVICE *);
-    REC *(*get)(SERVICE *, KEY *);
-    REC *(*next)(SERVICE *);
+    int (*get)(SERVICE *, KEY *, REC *);
+    int (*next)(SERVICE *, KEY *, REC *);
     int (*insert)(SERVICE *, KEY *, REC *);
     void (*delete)(SERVICE *, KEY *);
     size_t (*rec_size)(SERVICE *, REC *);

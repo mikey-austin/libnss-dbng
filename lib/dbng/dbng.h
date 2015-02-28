@@ -36,27 +36,13 @@ typedef struct DBNG {
  */
 extern DBNG *dbng_create(const char *pri,
                          const char *sec,
-                         int (*key_creator)(DB *, const DBT *, const DBT *, DBT *),
+                         int (*key_creator)(DB *, const DBT *,
+                                            const DBT *, DBT *),
                          int flags);
 
 /**
  *
  */
 extern void dbng_free(DBNG **handle);
-
-/**
- *
- */
-extern int dbng_insert(DBNG *handle, const char *key, const char *value);
-
-/**
- *
- */
-extern char *dbng_get(DBNG *handle, const char *key);
-
-/**
- *
- */
-extern int dbng_delete(DBNG *handle, const char *key);
 
 #endif

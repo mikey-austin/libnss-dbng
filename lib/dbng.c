@@ -55,7 +55,8 @@ extern DBNG
     ret = handle->pri->open(handle->pri, NULL, pri, NULL, DB_BTREE,
                                 db_flags, DBNG_PERMS);
     if(ret != 0) {
-        warnx("db open (%s/%s) failed: %s", DEFAULT_BASE, pri, db_strerror(ret));
+        warnx("db open (%s/%s) failed: %s", DEFAULT_BASE, pri,
+              db_strerror(ret));
         goto err;
     }
 
@@ -76,12 +77,14 @@ extern DBNG
         ret = handle->sec->open(handle->sec, NULL, sec, NULL, DB_BTREE,
                                 db_flags, DBNG_PERMS);
         if(ret != 0) {
-            warnx("db open (%s/%s) failed: %s", DEFAULT_BASE, sec, db_strerror(ret));
+            warnx("db open (%s/%s) failed: %s", DEFAULT_BASE, sec,
+                  db_strerror(ret));
             goto err;
         }
 
         /* Associate the secondary with the primary. */
-        handle->pri->associate(handle->pri, NULL, handle->sec, key_creator, 0);
+        handle->pri->associate(handle->pri, NULL, handle->sec,
+                               key_creator, 0);
     }
 
     return handle;
@@ -107,22 +110,4 @@ dbng_free(DBNG **handle)
             (*handle)->env->close((*handle)->env, 0);
         xfree((void **) handle);
     }
-}
-
-extern int
-dbng_insert(DBNG *handle, const char *key, const char *value)
-{
-    return 0;
-}
-
-extern char *
-dbng_get(DBNG *handle, const char *key)
-{
-    return NULL;
-}
-
-extern int
-dbng_delete(DBNG *handle, const char *key)
-{
-    return 0;
 }
