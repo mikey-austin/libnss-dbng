@@ -79,7 +79,7 @@ service_get_rec(SERVICE *service, KEY *key, REC *rec)
         service->unpack_rec(service, rec, &dbval);
 
     /* Cleanup packed key data. */
-    free(dbkey.data);
+    xfree((void **) &dbkey.data);
 
     return ret;
 }
@@ -95,8 +95,8 @@ service_set_rec(SERVICE *service, KEY *key, REC *rec)
     service->pack_rec(service, rec, &dbrec);
     ret = db->put(db, service->db->txn, &dbkey, &dbrec, 0);
 
-    free(dbkey.data);
-    free(dbrec.data);
+    xfree((void **) &dbkey.data);
+    xfree((void **) &dbrec.data);
 
     return ret;
 }
