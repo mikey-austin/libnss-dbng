@@ -36,3 +36,5 @@ m4*
 *.trs
 *.Po
 check/test-wrapper
+check/test_*
+!check/test_*.c
