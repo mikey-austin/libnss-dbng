@@ -6,6 +6,7 @@
  */
 
 #include <err.h>
+#include <string.h>
 
 #include <dbng/service.h>
 #include <service-passwd.h>
@@ -23,6 +24,14 @@ main(int argc, char *argv[])
     if(passwd == NULL) {
         _result = FAIL;
         warnx("passwd service is NULL");
+    }
+
+    if(strcmp(passwd->pri, PASSWD_PRI)
+       || strcmp(passwd->sec, PASSWD_SEC))
+    {
+        _result = FAIL;
+        warnx("incorrectly initialized passwd service");
+        goto err;
     }
 
     if(passwd->truncate(passwd) != 0) {
@@ -81,6 +90,57 @@ main(int argc, char *argv[])
     {
         _result = FAIL;
         warnx("fetched record did not match inserted record");
+        goto err;
+    }
+
+    /*
+     * Fetch a non-existant record.
+     */
+    key2.data.pri = "non-existant-user";
+    memset(&rec2, 0, sizeof(rec2));
+    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec2);
+    if(ret != DB_NOTFOUND) {
+        _result = FAIL;
+        warnx("fetch unexpected return code");
+        goto err;
+    }
+
+    /*
+     * Fetch the record by secondary index.
+     */
+    key2.base.type = SEC;
+    key2.data.sec = 1001;
+    memset(&rec2, 0, sizeof(rec2));
+    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec2);
+    if(ret != 0) {
+        _result = FAIL;
+        warnx("could not fetch passwd record");
+        goto err;
+    }
+
+    if(rec2.base.type != rec.base.type
+       || rec2.uid != rec.uid
+       || rec2.gid != rec.gid
+       || strcmp(rec2.name, rec.name)
+       || strcmp(rec2.passwd, rec.passwd)
+       || strcmp(rec2.gecos, rec.gecos)
+       || strcmp(rec2.shell, rec.shell)
+       || strcmp(rec2.homedir, rec.homedir))
+    {
+        _result = FAIL;
+        warnx("fetched record (by uid) did not match inserted record");
+        goto err;
+    }
+
+    /*
+     * Fetch a non-existant record by secondary index.
+     */
+    key2.data.sec = 8888;
+    memset(&rec2, 0, sizeof(rec2));
+    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec2);
+    if(ret != DB_NOTFOUND) {
+        _result = FAIL;
+        warnx("fetch by uid unexpected return code");
         goto err;
     }
 

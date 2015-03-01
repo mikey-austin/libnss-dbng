@@ -11,6 +11,9 @@
 #include "dbng/service.h"
 #include "dbng/utils.h"
 
+#define PASSWD_PRI "passwd.db"
+#define PASSWD_SEC "passwd-uid.db"
+
 typedef struct PASSWD_REC {
     REC base;
     uid_t uid;

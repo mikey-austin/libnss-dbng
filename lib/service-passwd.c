@@ -25,6 +25,8 @@ extern SERVICE
     service = xmalloc(sizeof(*service));
     memset(service, 0, sizeof(*service));
     service->type = PASSWD;
+    service->pri = PASSWD_PRI;
+    service->sec = PASSWD_SEC;
 
     /* Set implemented functions. */
     service->key_creator = key_creator;
