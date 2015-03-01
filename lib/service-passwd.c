@@ -23,6 +23,7 @@ extern SERVICE
     SERVICE *service = NULL;
 
     service = xmalloc(sizeof(*service));
+    memset(service, 0, sizeof(*service));
     service->type = PASSWD;
 
     /* Set implemented functions. */
