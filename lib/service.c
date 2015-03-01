@@ -113,3 +113,14 @@ service_next_rec(SERVICE *service, KEY *key, REC *rec)
     /* Not yet implemented. */
     return 0;
 }
+
+extern int
+service_truncate(SERVICE *service)
+{
+    int ret, truncated;
+    DB *db = service->db->pri; /* Secondary database updated automatically. */
+
+    ret = db->truncate(db, service->db->txn, &truncated, 0);
+
+    return ret;
+}

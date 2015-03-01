@@ -40,6 +40,7 @@ extern SERVICE
     service->set = service_set_rec;
     service->next = service_next_rec;
     service->delete = service_delete_rec;
+    service->truncate = service_truncate;
 
     return (SERVICE *) service;
 }
