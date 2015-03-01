@@ -55,7 +55,7 @@ struct SERVICE {
 /**
  *
  */
-extern SERVICE *service_create(enum TYPE type, int flags);
+extern SERVICE *service_create(enum TYPE type, int flags, const char *base);
 
 /**
  *

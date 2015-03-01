@@ -19,6 +19,11 @@ if test -z ${DEFAULT_BASE}; then
     DEFAULT_BASE="${localstatedir}/dbng"
 fi
 
+AC_ARG_VAR([TEST_BASE], [test base for database files])
+if test -z ${TEST_BASE}; then
+    TEST_BASE="/tmp/dbng"
+fi
+
 AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [build the library in debug mode])],
     [debug=yes], [debug=no])
 
@@ -39,6 +44,6 @@ else
 fi
 
 AC_CHECK_FUNCS([strerror])
-AC_CONFIG_FILES([Makefile lib/Makefile nss/Makefile])
+AC_CONFIG_FILES([Makefile lib/Makefile nss/Makefile check/Makefile])
 
 AC_OUTPUT

@@ -33,3 +33,5 @@ config.h*
 .lib*
 m4*
 *.la
+*.trs
+*.Po

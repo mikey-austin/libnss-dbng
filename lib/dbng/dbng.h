@@ -25,19 +25,20 @@
 #define DBNG_PERMS 0600
 
 typedef struct DBNG {
+    DB_TXN *txn;
     DB_ENV *env;
     DB *pri;
     DB *sec;
-    DB_TXN *txn;
+    DBC *cursor;
 } DBNG;
 
 /**
  *
  */
-extern DBNG *dbng_create(const char *pri,
+extern DBNG *dbng_create(const char *base,
+                         const char *pri,
                          const char *sec,
-                         int (*key_creator)(DB *, const DBT *,
-                                            const DBT *, DBT *),
+                         int (*key_creator)(DB *, const DBT *, const DBT *, DBT *),
                          int flags);
 
 /**

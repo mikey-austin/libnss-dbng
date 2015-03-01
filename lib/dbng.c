@@ -9,7 +9,7 @@
 #include "dbng/utils.h"
 
 extern DBNG
-*dbng_create(const char *pri, const char *sec,
+*dbng_create(const char *base, const char *pri, const char *sec,
              int (*key_creator)(DB *, const DBT *, const DBT *,DBT *),
              int flags)
 {
@@ -17,10 +17,11 @@ extern DBNG
     int db_flags, ret;
 
     handle = xmalloc(sizeof(*handle));
-    handle->env = NULL;
-    handle->pri = NULL;
-    handle->sec = NULL;
-    handle->txn = NULL;
+    handle->txn    = NULL;
+    handle->cursor = NULL;
+    handle->env    = NULL;
+    handle->pri    = NULL;
+    handle->sec    = NULL;
 
     /* Open & setup environment. */
     db_flags = DB_CREATE
@@ -36,7 +37,7 @@ extern DBNG
         goto err;
     }
 
-    ret = handle->env->open(handle->env, DEFAULT_BASE, db_flags, 0);
+    ret = handle->env->open(handle->env, base, db_flags, 0);
     if(ret != 0) {
         warnx("error opening db environment: %s",
               db_strerror(ret));
@@ -55,7 +56,7 @@ extern DBNG
     ret = handle->pri->open(handle->pri, NULL, pri, NULL, DB_BTREE,
                                 db_flags, DBNG_PERMS);
     if(ret != 0) {
-        warnx("db open (%s/%s) failed: %s", DEFAULT_BASE, pri,
+        warnx("db open (%s/%s) failed: %s", base, pri,
               db_strerror(ret));
         goto err;
     }
@@ -77,7 +78,7 @@ extern DBNG
         ret = handle->sec->open(handle->sec, NULL, sec, NULL, DB_BTREE,
                                 db_flags, DBNG_PERMS);
         if(ret != 0) {
-            warnx("db open (%s/%s) failed: %s", DEFAULT_BASE, sec,
+            warnx("db open (%s/%s) failed: %s", base, sec,
                   db_strerror(ret));
             goto err;
         }

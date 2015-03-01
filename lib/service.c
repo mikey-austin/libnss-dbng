@@ -12,7 +12,7 @@
 #include "service-passwd.h"
 
 extern SERVICE
-*service_create(enum TYPE type, int flags)
+*service_create(enum TYPE type, int flags, const char *base)
 {
     SERVICE *service = NULL;
 
@@ -28,7 +28,8 @@ extern SERVICE
     }
 
     /* Initialize the database for this service. */
-    service->db = dbng_create(service->pri,
+    service->db = dbng_create(base,
+                              service->pri,
                               service->sec,
                               service->key_creator,
                               flags);
