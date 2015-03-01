@@ -5,6 +5,7 @@ LT_INIT([dlopen])
 AC_CONFIG_SRCDIR([lib/dbng.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
+AC_PATH_PROG([VALGRIND], [valgrind])
 
 # Checks for programs.
 AC_PROG_CC
@@ -44,6 +45,6 @@ else
 fi
 
 AC_CHECK_FUNCS([strerror])
-AC_CONFIG_FILES([Makefile lib/Makefile nss/Makefile check/Makefile])
+AC_CONFIG_FILES([Makefile lib/Makefile nss/Makefile check/Makefile check/test-wrapper])
 
 AC_OUTPUT

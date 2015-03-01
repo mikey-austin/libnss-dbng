@@ -35,3 +35,4 @@ m4*
 *.la
 *.trs
 *.Po
+check/test-wrapper
