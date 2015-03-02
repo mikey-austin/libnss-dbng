@@ -176,6 +176,70 @@ main(int argc, char *argv[])
         goto err;
     }
 
+    /*
+     * Test transaction rollback.
+     */
+    key2.base.type = PRI;
+    key2.data.pri = "another-test-dbng-user";
+
+    rec2.base.type = PASSWD;
+    rec2.uid = 2001;
+    rec2.gid = 2001;
+    rec2.name = "another-test-dbng-user";
+    rec2.passwd = "x";
+    rec2.gecos = "another test user";
+    rec2.shell = "/bin/bash";
+    rec2.homedir = "/home/another-test-dbng-user";
+
+    PASSWD_KEY key3;
+    PASSWD_REC rec3;
+    key3.base.type = PRI;
+    key3.data.pri = "yet-another-test-dbng-user";
+
+    rec3.base.type = PASSWD;
+    rec3.uid = 3001;
+    rec3.gid = 3001;
+    rec3.name = "yet-another-test-dbng-user";
+    rec3.passwd = "x";
+    rec3.gecos = "yet another test user";
+    rec3.shell = "/bin/bash";
+    rec3.homedir = "/home/yet-another-test-dbng-user";
+
+    ret = passwd->start_txn(passwd);
+    if(ret != 0) {
+        _result = FAIL;
+        warnx("could not start txn");
+        goto err;
+    }
+
+    ret = passwd->set(passwd, (KEY *) &key, (REC *) &rec);
+    if(ret != 0) {
+        _result = FAIL;
+        warnx("could not insert passwd record");
+        goto err;
+    }
+
+    ret = passwd->set(passwd, (KEY *) &key2, (REC *) &rec2);
+    if(ret != 0) {
+        _result = FAIL;
+        warnx("could not insert passwd record");
+        goto err;
+    }
+
+    ret = passwd->set(passwd, (KEY *) &key3, (REC *) &rec3);
+    if(ret != 0) {
+        _result = FAIL;
+        warnx("could not insert passwd record");
+        goto err;
+    }
+
+    ret = passwd->commit(passwd);
+    if(ret != 0) {
+        _result = FAIL;
+        warnx("could not commit txn");
+        goto err;
+    }
+
 err:
     service_free(&passwd);
 
