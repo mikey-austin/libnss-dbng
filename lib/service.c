@@ -110,8 +110,39 @@ service_delete_rec(SERVICE *service, KEY *key)
 extern int
 service_next_rec(SERVICE *service, KEY *key, REC *rec)
 {
-    /* Not yet implemented. */
-    return 0;
+    int ret;
+    DBT dbkey, dbval;
+    DB *db = service->db->pri;
+    DBC *cursor;
+
+    /* If the cursor is not set, create a new one. */
+    if(service->db->cursor == NULL) {
+        ret = db->cursor(db, service->db->txn, &service->db->cursor, 0);
+        if(ret != 0) {
+            service->db->cursor = NULL;
+            return ret;
+        }
+    }
+
+    cursor = service->db->cursor;
+    memset(&dbkey, 0, sizeof(dbkey));
+    memset(&dbval, 0, sizeof(dbval));
+
+    ret = cursor->get(cursor, &dbkey, &dbval, DB_NEXT);
+    switch(ret) {
+    case 0:
+        service->unpack_key(service, key, &dbkey);
+        service->unpack_rec(service, rec, &dbval);
+        break;
+
+    case DB_NOTFOUND:
+        /* We have reached the end of the iterator. */
+        cursor->close(cursor);
+        service->db->cursor = NULL;
+        break;
+    }
+
+    return ret;
 }
 
 extern int
