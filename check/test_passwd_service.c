@@ -144,6 +144,38 @@ main(int argc, char *argv[])
         goto err;
     }
 
+    /*
+     * Test deletion.
+     */
+    key2.base.type = PRI;
+    key2.data.pri = "test-dbng-user";
+    ret = passwd->delete(passwd, (KEY *) &key2);
+    if(ret != 0) {
+        _result = FAIL;
+        warnx("could not delete passwd record");
+        goto err;
+    }
+
+    /*
+     * Fetch the recently deleted record by primary & secondary indexes.
+     */
+    memset(&rec2, 0, sizeof(rec2));
+    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec2);
+    if(ret != DB_NOTFOUND) {
+        _result = FAIL;
+        warnx("fetch unexpected return code");
+        goto err;
+    }
+
+    key2.base.type = SEC;
+    key2.data.sec = 1001;
+    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec2);
+    if(ret != DB_NOTFOUND) {
+        _result = FAIL;
+        warnx("fetch by uid unexpected return code");
+        goto err;
+    }
+
 err:
     service_free(&passwd);
 
