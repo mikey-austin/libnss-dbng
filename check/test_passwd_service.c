@@ -14,6 +14,8 @@
 #define PASS 0
 #define FAIL 1
 
+static int reccmp(PASSWD_REC *, PASSWD_REC *);
+
 int
 main(int argc, char *argv[])
 {
@@ -79,15 +81,7 @@ main(int argc, char *argv[])
         goto err;
     }
 
-    if(rec2.base.type != rec.base.type
-       || rec2.uid != rec.uid
-       || rec2.gid != rec.gid
-       || strcmp(rec2.name, rec.name)
-       || strcmp(rec2.passwd, rec.passwd)
-       || strcmp(rec2.gecos, rec.gecos)
-       || strcmp(rec2.shell, rec.shell)
-       || strcmp(rec2.homedir, rec.homedir))
-    {
+    if(reccmp(&rec2, &rec)) {
         _result = FAIL;
         warnx("fetched record did not match inserted record");
         goto err;
@@ -118,15 +112,7 @@ main(int argc, char *argv[])
         goto err;
     }
 
-    if(rec2.base.type != rec.base.type
-       || rec2.uid != rec.uid
-       || rec2.gid != rec.gid
-       || strcmp(rec2.name, rec.name)
-       || strcmp(rec2.passwd, rec.passwd)
-       || strcmp(rec2.gecos, rec.gecos)
-       || strcmp(rec2.shell, rec.shell)
-       || strcmp(rec2.homedir, rec.homedir))
-    {
+    if(reccmp(&rec2, &rec)) {
         _result = FAIL;
         warnx("fetched record (by uid) did not match inserted record");
         goto err;
@@ -268,6 +254,7 @@ main(int argc, char *argv[])
      * Attempt to fetch the record. Should succeed as previous
      * transaction was rolled back.
      */
+    PASSWD_KEY key4;
     PASSWD_REC rec4;
     ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec4);
     if(ret != 0) {
@@ -276,8 +263,75 @@ main(int argc, char *argv[])
         goto err;
     }
 
+    /*
+     * Test iterating over records.
+     */
+    PASSWD_REC *rp;
+    int i;
+    for(i = 0;
+        (ret = passwd->next(passwd, (KEY *) &key4, (REC *) &rec4)) != DB_NOTFOUND;
+        i++)
+    {
+        if(ret != 0 && ret != DB_NOTFOUND) {
+            _result = FAIL;
+            warnx("unexpected return code from next: %d", ret);
+            goto err;                
+        }
+
+        switch(rec4.uid) {
+        case 1001:
+            rp = &rec;
+            break;
+
+        case 2001:
+            rp = &rec2;
+            break;
+
+        case 3001:
+            rp = &rec3;
+            break;
+        }
+
+        if(reccmp(&rec4, rp)) {
+            _result = FAIL;
+            warnx("records don't match");
+            goto err;                
+        }
+    }
+
+    if(i != 3) {
+        _result = FAIL;
+        warnx("expecting 3 records, seen %d", i);
+        goto err;                
+    }
+
+    if(passwd->db->cursor != NULL) {
+        _result = FAIL;
+        warnx("cursor not cleaned up correctly");
+        goto err;                
+    }
+
 err:
     service_free(&passwd);
 
     return _result;
+}
+
+static int
+reccmp(PASSWD_REC *a, PASSWD_REC *b)
+{
+    if(a->base.type != b->base.type
+       || a->uid != b->uid
+       || a->gid != b->gid
+       || strcmp(a->name, b->name)
+       || strcmp(a->passwd, b->passwd)
+       || strcmp(a->gecos, b->gecos)
+       || strcmp(a->shell, b->shell)
+       || strcmp(a->homedir, b->homedir))
+    {
+        return 1;
+    }
+
+    /* The two records are equal. */
+    return 0;
 }
