@@ -240,6 +240,42 @@ main(int argc, char *argv[])
         goto err;
     }
 
+    /*
+     * Test the rollback by truncating the database.
+     */
+    ret = passwd->start_txn(passwd);
+    if(ret != 0) {
+        _result = FAIL;
+        warnx("could not start txn");
+        goto err;
+    }
+
+    ret = passwd->truncate(passwd);
+    if(ret != 0) {
+        _result = FAIL;
+        warnx("could not truncate passwd service");
+        goto err;
+    }
+
+    ret = passwd->rollback(passwd);
+    if(ret != 0) {
+        _result = FAIL;
+        warnx("could not rollback txn");
+        goto err;
+    }
+
+    /*
+     * Attempt to fetch the record. Should succeed as previous
+     * transaction was rolled back.
+     */
+    PASSWD_REC rec4;
+    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec4);
+    if(ret != 0) {
+        _result = FAIL;
+        warnx("could not fetch passwd record");
+        goto err;
+    }
+
 err:
     service_free(&passwd);
 
