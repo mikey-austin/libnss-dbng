@@ -24,8 +24,8 @@ main(int argc, char *argv[])
 
     passwd = service_create(PASSWD, 0, TEST_BASE);
     if(passwd == NULL) {
-        _result = FAIL;
         warnx("passwd service is NULL");
+        return FAIL;
     }
 
     if(strcmp(passwd->pri, PASSWD_PRI)

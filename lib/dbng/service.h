@@ -8,7 +8,7 @@
 #ifndef SERVICE_H
 #define SERVICE_H
 
-#include "dbng/dbng.h"
+#include <lib/dbng/dbng.h>
 
 enum TYPE {
     PASSWD,
