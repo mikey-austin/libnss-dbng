@@ -44,6 +44,9 @@ extern SERVICE
     service->next = service_next_rec;
     service->delete = service_delete_rec;
     service->truncate = service_truncate;
+    service->start_txn = service_start_txn;
+    service->commit = service_commit_txn;
+    service->rollback = service_rollback_txn;
 
     return (SERVICE *) service;
 }

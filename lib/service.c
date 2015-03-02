@@ -155,3 +155,50 @@ service_truncate(SERVICE *service)
 
     return ret;
 }
+
+extern int
+service_start_txn(SERVICE *service)
+{
+    int ret;
+
+    if(service->db->txn != NULL)
+        return -1;
+
+    ret = service->db->env->txn_begin(service->db->env, NULL, &service->db->txn, 0);
+    if(ret != 0)
+        warnx("could not create transaction");
+
+    return ret;
+}
+
+extern int
+service_commit_txn(SERVICE *service)
+{
+    int ret;
+
+    if(service->db->txn == NULL)
+        return -1;
+
+    ret = service->db->txn->commit(service->db->txn, 0);
+    if(ret != 0)
+        warnx("could not commit transaction");
+    service->db->txn = NULL;
+
+    return ret;
+}
+
+extern int
+service_rollback_txn(SERVICE *service)
+{
+    int ret;
+
+    if(service->db->txn == NULL)
+        return -1;
+
+    ret = service->db->txn->abort(service->db->txn);
+    if(ret != 0)
+        warnx("could not rollback transaction");
+    service->db->txn = NULL;
+
+    return ret;
+}

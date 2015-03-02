@@ -43,6 +43,9 @@ struct SERVICE {
     int (*set)(SERVICE *, KEY *, REC *);
     int (*delete)(SERVICE *, KEY *);
     int (*truncate)(SERVICE *);
+    int (*start_txn)(SERVICE *);
+    int (*commit)(SERVICE *);
+    int (*rollback)(SERVICE *);
     size_t (*rec_size)(SERVICE *, const REC *);
     size_t (*key_size)(SERVICE *, const KEY *);
     void (*pack_key)(SERVICE *, const KEY *, DBT *);
@@ -87,5 +90,20 @@ extern int service_delete_rec(SERVICE *service, KEY *key);
  *
  */
 extern int service_truncate(SERVICE *service);
+
+/**
+ *
+ */
+extern int service_start_txn(SERVICE *service);
+
+/**
+ *
+ */
+extern int service_commit_txn(SERVICE *service);
+
+/**
+ *
+ */
+extern int service_rollback_txn(SERVICE *service);
 
 #endif
