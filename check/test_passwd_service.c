@@ -275,7 +275,7 @@ main(int argc, char *argv[])
         if(ret != 0 && ret != DB_NOTFOUND) {
             _result = FAIL;
             warnx("unexpected return code from next: %d", ret);
-            goto err;                
+            goto err;
         }
 
         switch(rec4.uid) {
@@ -290,25 +290,30 @@ main(int argc, char *argv[])
         case 3001:
             rp = &rec3;
             break;
+
+        default:
+            _result = FAIL;
+            warnx("unexpected uid: %d", rec4.uid);
+            goto err;
         }
 
         if(reccmp(&rec4, rp)) {
             _result = FAIL;
             warnx("records don't match");
-            goto err;                
+            goto err;
         }
     }
 
     if(i != 3) {
         _result = FAIL;
         warnx("expecting 3 records, seen %d", i);
-        goto err;                
+        goto err;
     }
 
     if(passwd->db->cursor != NULL) {
         _result = FAIL;
         warnx("cursor not cleaned up correctly");
-        goto err;                
+        goto err;
     }
 
 err:
