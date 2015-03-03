@@ -10,9 +10,22 @@
 #include <pwd.h>
 #include <errno.h>
 #include <string.h>
+#include <pthread.h>
 
 #include <lib/dbng/service.h>
 #include <lib/service-passwd.h>
+
+#define NSS_DBNG_LOCK()                \
+    do {                               \
+        pthread_mutex_lock(&_mutex);   \
+    } while (0)
+#define NSS_DBNG_UNLOCK()              \
+    do {                               \
+        pthread_mutex_unlock(&_mutex); \
+    } while (0)
+
+static pthread_mutex_t _mutex = PTHREAD_MUTEX_INITIALIZER;
+static SERVICE *_service = NULL;
 
 static enum nss_status fill_passwd(struct passwd *, char *, size_t, SERVICE *, PASSWD_REC *, int *);
 
@@ -22,8 +35,25 @@ static enum nss_status fill_passwd(struct passwd *, char *, size_t, SERVICE *, P
 enum nss_status
 _nss_dbng_setpwent(void)
 {
-    NSS_DEBUG("Initializing pw functions");
-    return NSS_STATUS_SUCCESS;
+    enum nss_status status = NSS_STATUS_SUCCESS;
+
+    NSS_DBNG_LOCK();
+
+    if(_service != NULL) {
+        status = NSS_STATUS_TRYAGAIN;
+        goto cleanup;
+    }
+
+    if((_service = service_create(PASSWD, DBNG_RO, DEFAULT_BASE)) == NULL) {
+        NSS_DEBUG("could not create passwd service object");
+        status = NSS_STATUS_UNAVAIL;
+        goto cleanup;
+    }
+
+cleanup:
+    NSS_DBNG_UNLOCK();
+
+    return status;
 }
 
 /**
@@ -32,7 +62,13 @@ _nss_dbng_setpwent(void)
 enum nss_status
 _nss_dbng_endpwent(void)
 {
-    NSS_DEBUG("Finishing pw functions");
+    NSS_DBNG_LOCK();
+
+    if(_service != NULL) 
+        service_free(&_service);
+
+    NSS_DBNG_UNLOCK();
+
     return NSS_STATUS_SUCCESS;
 }
 
@@ -43,8 +79,42 @@ enum nss_status
 _nss_dbng_getpwent_r(struct passwd *pwbuf, char *buf,
                      size_t buflen, int *errnop)
 {
-    NSS_DEBUG("getpwent_r");
-    return NSS_STATUS_UNAVAIL;
+    PASSWD_KEY key;
+    PASSWD_REC rec;
+    int res;
+    enum nss_status status;
+
+    NSS_DBNG_LOCK();
+
+    if(_service == NULL) {
+        *errnop = ENOENT;
+        status = NSS_STATUS_UNAVAIL;
+        goto cleanup;
+    }
+
+    res = _service->next(_service, (KEY *) &key, (REC *) &rec);
+    switch(res) {
+    case 0:
+        NSS_DEBUG("found user by name %s", name);
+        status = fill_passwd(pwbuf, buf, buflen, _service, &rec, errnop);
+        break;
+
+    case DB_NOTFOUND:
+        *errnop = ENOENT;
+        status = NSS_STATUS_NOTFOUND;
+        goto cleanup;
+
+    default:
+        NSS_DEBUG("unknown status from next: %d", res);
+        *errnop = ENOENT;
+        status = NSS_STATUS_NOTFOUND;
+        goto cleanup;
+    }
+
+cleanup:
+    NSS_DBNG_UNLOCK();
+
+    return status;
 }
 
 /**
@@ -60,13 +130,16 @@ _nss_dbng_getpwnam_r(const char* name, struct passwd *pwbuf,
     int res;
     enum nss_status status;
 
+    NSS_DBNG_LOCK();
+
     if((passwd = service_create(PASSWD, DBNG_RO, DEFAULT_BASE)) == NULL) {
         NSS_DEBUG("could not create passwd service object");
         return NSS_STATUS_UNAVAIL;
     }
 
     key.base.type = PRI;
-    key.data.pri = (char *) name;
+    key.data.pri = (char *) name; // I know.
+
     res = passwd->get(passwd, (KEY *) &key, (REC *) &rec);
     switch(res) {
     case 0:
@@ -75,16 +148,20 @@ _nss_dbng_getpwnam_r(const char* name, struct passwd *pwbuf,
         break;
 
     case DB_NOTFOUND:
+        *errnop = ENOENT;
         status = NSS_STATUS_NOTFOUND;
         goto cleanup;
 
     default:
         NSS_DEBUG("unknown status from get: %d", res);
+        *errnop = ENOENT;
+        status = NSS_STATUS_NOTFOUND;
         goto cleanup;
     }
 
 cleanup:
     service_free(&passwd);
+    NSS_DBNG_UNLOCK();
 
     return status;
 }
@@ -102,8 +179,11 @@ _nss_dbng_getpwuid_r(uid_t uid, struct passwd *pwbuf,
     int res;
     enum nss_status status;
 
+    NSS_DBNG_LOCK();
+
     if((passwd = service_create(PASSWD, DBNG_RO, DEFAULT_BASE)) == NULL) {
         NSS_DEBUG("could not create passwd service object");
+        *errnop = ENOENT;
         return NSS_STATUS_UNAVAIL;
     }
 
@@ -118,16 +198,21 @@ _nss_dbng_getpwuid_r(uid_t uid, struct passwd *pwbuf,
         break;
 
     case DB_NOTFOUND:
+        *errnop = ENOENT;
         status = NSS_STATUS_NOTFOUND;
         goto cleanup;
 
     default:
         NSS_DEBUG("unknown status from get: %d", res);
+        *errnop = ENOENT;
+        status = NSS_STATUS_UNAVAIL;
         goto cleanup;
     }
 
 cleanup:
     service_free(&passwd);
+
+    NSS_DBNG_UNLOCK();
 
     return status;
 }
