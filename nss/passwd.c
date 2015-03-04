@@ -50,6 +50,8 @@ _nss_dbng_setpwent(void)
         goto cleanup;
     }
 
+    _service->start_txn(_service);
+
 cleanup:
     NSS_DBNG_UNLOCK();
 
@@ -64,8 +66,10 @@ _nss_dbng_endpwent(void)
 {
     NSS_DBNG_LOCK();
 
-    if(_service != NULL) 
+    if(_service != NULL) {
+        _service->commit(_service);
         service_free(&_service);
+    }
 
     NSS_DBNG_UNLOCK();
 
@@ -95,7 +99,6 @@ _nss_dbng_getpwent_r(struct passwd *pwbuf, char *buf,
     res = _service->next(_service, (KEY *) &key, (REC *) &rec);
     switch(res) {
     case 0:
-        NSS_DEBUG("found user by name %s", name);
         status = fill_passwd(pwbuf, buf, buflen, _service, &rec, errnop);
         break;
 

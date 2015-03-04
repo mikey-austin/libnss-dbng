@@ -1,6 +1,6 @@
 /**
- * @file test_service.h
- * @brief Test service interface.
+ * @file test_passwd_service.c
+ * @brief Test passwd service interface.
  * @author Mikey Austin
  * @date 2015
  */
