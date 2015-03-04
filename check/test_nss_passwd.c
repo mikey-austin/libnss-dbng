@@ -102,7 +102,106 @@ main(int argc, char *argv[])
         goto err;
     }
 
+    /* Test the pwent interfaces. */
+    status = _nss_dbng_setpwent();
+    if(status != NSS_STATUS_SUCCESS) {
+        warnx("expected to to setpwent");
+        result = FAIL;
+        goto err;
+    }
+
+    status = _nss_dbng_setpwent();
+    if(status != NSS_STATUS_TRYAGAIN) {
+        warnx("expected to be told to try again setpwent");
+        result = FAIL;
+        goto err;
+    }
+
+    int i;
+    for(i = 0;
+        _nss_dbng_getpwent_r(&pwbuf, buf, MAX_BUF, &errnop);
+        i++)
+    {
+        switch(pwbuf.pw_uid) {
+        case 1001:
+            if(!(pwbuf.pw_uid == 1001
+                 && pwbuf.pw_gid == 1101
+                 && !strcmp(pwbuf.pw_name, "test-dbng-user")
+                 && !strcmp(pwbuf.pw_gecos, "test user")
+                 && !strcmp(pwbuf.pw_passwd, "x")
+                 && !strcmp(pwbuf.pw_shell, "/bin/bash")
+                 && !strcmp(pwbuf.pw_dir, "/home/test-dbng-user")))
+            {
+                warnx("unexpected user details from getpwent_r");
+                result = FAIL;
+                goto err;
+            }
+            break;
+
+        case 2001:
+            if(!(pwbuf.pw_uid == 2001
+                 && pwbuf.pw_gid == 2101
+                 && !strcmp(pwbuf.pw_name, "another-test-dbng-user")
+                 && !strcmp(pwbuf.pw_gecos, "another test user")
+                 && !strcmp(pwbuf.pw_passwd, "x")
+                 && !strcmp(pwbuf.pw_shell, "/bin/bash")
+                 && !strcmp(pwbuf.pw_dir, "/home/another-test-dbng-user")))
+            {
+                warnx("unexpected user details from getpwent_r");
+                result = FAIL;
+                goto err;
+            }
+            break;
+
+        case 3001:
+            if(!(pwbuf.pw_uid == 3001
+                 && pwbuf.pw_gid == 3101
+                 && !strcmp(pwbuf.pw_name, "yet-another-test-dbng-user")
+                 && !strcmp(pwbuf.pw_gecos, "yet another test user")
+                 && !strcmp(pwbuf.pw_passwd, "x")
+                 && !strcmp(pwbuf.pw_shell, "/bin/bash")
+                 && !strcmp(pwbuf.pw_dir, "/home/yet-another-test-dbng-user")))
+            {
+                warnx("unexpected user details from getpwent_r");
+                result = FAIL;
+                goto err;
+            }
+            break;
+
+        default:
+            result = FAIL;
+            warnx("unexpected uid: %d", pwbuf.pw_uid);
+            goto err;
+        }
+        
+        memset(&pwbuf, 0, sizeof(pwbuf));
+        memset(buf, 0, sizeof(buf));
+    }
+
+    if(i != 3) {
+        warnx("unexpected number of iterations (%d), getpwent_r", i);
+        result = FAIL;
+        goto err;
+    }
+
+    status = _nss_dbng_endpwent();
+    if(status != NSS_STATUS_SUCCESS) {
+        warnx("unexpected non-success, endpwent");
+        result = FAIL;
+        goto err;
+    }
+
+    status = _nss_dbng_setpwent();
+    if(status != NSS_STATUS_SUCCESS) {
+        warnx("expected to to setpwent");
+        result = FAIL;
+        goto err;
+    }
+    _nss_dbng_endpwent();
+
 err:
+    _nss_dbng_endpwent();
+
     return result;
 }
 
