@@ -32,19 +32,14 @@ main(int argc, char *argv[])
      */
     char buf[MAX_BUF];
     struct passwd pwbuf;
+    memset(&pwbuf, 0, sizeof(pwbuf));
     memset(buf, 0, sizeof(buf));
 
     /* First with an insufficient buffer size. */
     status = _nss_dbng_getpwnam_r("test-dbng-user", &pwbuf, buf, 1, &errnop);
     if(status != NSS_STATUS_TRYAGAIN && errnop != ERANGE) {
         warnx("expected out of space");
-        goto err;
-    }
-
-    /* Now with a sufficient buffer size. */
-    status = _nss_dbng_getpwnam_r("test-dbng-user", &pwbuf, buf, MAX_BUF, &errnop);
-    if(status != NSS_STATUS_SUCCESS) {
-        warnx("expected to find the user");
+        result = FAIL;
         goto err;
     }
 
@@ -52,6 +47,28 @@ main(int argc, char *argv[])
     status = _nss_dbng_getpwnam_r("non-existant-user-name", &pwbuf, buf, MAX_BUF, &errnop);
     if(status != NSS_STATUS_NOTFOUND) {
         warnx("expected to not find the user");
+        result = FAIL;
+        goto err;
+    }
+
+    /* Now with a sufficient buffer size. */
+    status = _nss_dbng_getpwnam_r("test-dbng-user", &pwbuf, buf, MAX_BUF, &errnop);
+    if(status != NSS_STATUS_SUCCESS) {
+        warnx("expected to find the user");
+        result = FAIL;
+        goto err;
+    }
+
+    if(!(pwbuf.pw_uid == 1001
+         && pwbuf.pw_gid == 1101
+         && !strcmp(pwbuf.pw_name, "test-dbng-user")
+         && !strcmp(pwbuf.pw_gecos, "test user")
+         && !strcmp(pwbuf.pw_passwd, "x")
+         && !strcmp(pwbuf.pw_shell, "/bin/bash")
+         && !strcmp(pwbuf.pw_dir, "/home/test-dbng-user")))
+    {
+        warnx("unexpected user details from getpwnam_r");
+        result = FAIL;
         goto err;
     }
 
@@ -95,7 +112,7 @@ setup_db(void)
 
     rec.base.type = PASSWD;
     rec.uid = 1001;
-    rec.gid = 1001;
+    rec.gid = 1101;
     rec.name = "test-dbng-user";
     rec.passwd = "x";
     rec.gecos = "test user";
@@ -109,7 +126,7 @@ setup_db(void)
 
     rec2.base.type = PASSWD;
     rec2.uid = 2001;
-    rec2.gid = 2001;
+    rec2.gid = 2101;
     rec2.name = "another-test-dbng-user";
     rec2.passwd = "x";
     rec2.gecos = "another test user";
@@ -123,7 +140,7 @@ setup_db(void)
 
     rec3.base.type = PASSWD;
     rec3.uid = 3001;
-    rec3.gid = 3001;
+    rec3.gid = 3101;
     rec3.name = "yet-another-test-dbng-user";
     rec3.passwd = "x";
     rec3.gecos = "yet another test user";
