@@ -72,6 +72,29 @@ main(int argc, char *argv[])
         goto err;
     }
 
+    /* Test by uid. */
+    memset(&pwbuf, 0, sizeof(pwbuf));
+    memset(buf, 0, sizeof(buf));
+    status = _nss_dbng_getpwuid_r(1001, &pwbuf, buf, MAX_BUF, &errnop);
+    if(status != NSS_STATUS_SUCCESS) {
+        warnx("expected to find the user");
+        result = FAIL;
+        goto err;
+    }
+
+    if(!(pwbuf.pw_uid == 1001
+         && pwbuf.pw_gid == 1101
+         && !strcmp(pwbuf.pw_name, "test-dbng-user")
+         && !strcmp(pwbuf.pw_gecos, "test user")
+         && !strcmp(pwbuf.pw_passwd, "x")
+         && !strcmp(pwbuf.pw_shell, "/bin/bash")
+         && !strcmp(pwbuf.pw_dir, "/home/test-dbng-user")))
+    {
+        warnx("unexpected user details from getpwnam_r");
+        result = FAIL;
+        goto err;
+    }
+
 err:
     return result;
 }
