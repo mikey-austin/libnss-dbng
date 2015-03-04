@@ -27,9 +27,6 @@ main(int argc, char *argv[])
     if((result = setup_db()) != PASS)
         goto err;
 
-    /*
-     * Test getpwnam_r.
-     */
     char buf[MAX_BUF];
     struct passwd pwbuf;
     memset(&pwbuf, 0, sizeof(pwbuf));
@@ -91,6 +88,16 @@ main(int argc, char *argv[])
          && !strcmp(pwbuf.pw_dir, "/home/test-dbng-user")))
     {
         warnx("unexpected user details from getpwnam_r");
+        result = FAIL;
+        goto err;
+    }
+
+    /* Now with a non-existant user by uid. */
+    memset(&pwbuf, 0, sizeof(pwbuf));
+    memset(buf, 0, sizeof(buf));
+    status = _nss_dbng_getpwuid_r(9999, &pwbuf, buf, MAX_BUF, &errnop);
+    if(status != NSS_STATUS_NOTFOUND) {
+        warnx("expected to not find the user by uid");
         result = FAIL;
         goto err;
     }
