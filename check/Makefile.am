@@ -8,7 +8,7 @@ test_passwd_service_LDFLAGS = -static
 test_passwd_service_CFLAGS = -I../lib
 test_passwd_service_SOURCES = test_passwd_service.c
 
-test_nss_passwd_LDADD = ../nss/libnss_dbng.la
+test_nss_passwd_LDADD = ../nss/libnss_dbng_test.la
 test_nss_passwd_LDFLAGS = -static
 test_nss_passwd_CFLAGS = -I../lib -I../nss
 test_nss_passwd_SOURCES = test_nss_passwd.c

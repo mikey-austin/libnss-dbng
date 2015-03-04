@@ -27,13 +27,6 @@
 #  define NSS_DEBUG(msg, ...)
 #endif
 
-#ifdef DEBUG
-#  ifdef DEFAULT_BASE
-#    undef DEFAULT_BASE
-#    define DEFAULT_BASE TEST_BASE
-#  endif
-#endif
-
 #define NSS_ERROR(msg, ...) syslog(LOG_ERR, (msg), ## __VA_ARGS__)
 
 #define DBNG_PASSWD     "passwd.db"
