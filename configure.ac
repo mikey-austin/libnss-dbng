@@ -45,6 +45,6 @@ else
 fi
 
 AC_CHECK_FUNCS([strerror])
-AC_CONFIG_FILES([Makefile lib/Makefile nss/Makefile check/Makefile check/test-wrapper])
+AC_CONFIG_FILES([Makefile lib/Makefile nss/Makefile check/Makefile dbngctl/Makefile check/test-wrapper])
 
 AC_OUTPUT
