@@ -1,6 +1,6 @@
 /**
- * @file test_passwd_service.c
- * @brief Test passwd service interface.
+ * @file dbngctl.c
+ * @brief Database management program.
  * @author Mikey Austin
  * @date 2015
  */
