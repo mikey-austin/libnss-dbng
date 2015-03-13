@@ -12,13 +12,15 @@
 #include <unistd.h>
 
 #include <dbng/service.h>
-#include <service-passwd.h>
 
 #define PROGNAME "dbngctl"
 
 extern char *optarg;
 
 static void usage(void);
+static void list(SERVICE *);
+static void add(SERVICE *);
+static void delete(SERVICE *);
 
 enum CMD {
     ADD,
@@ -36,10 +38,25 @@ usage(void)
     _exit(1);
 }
 
+static void
+list(SERVICE *service)
+{
+}
+
+static void
+add(SERVICE *service)
+{
+}
+
+static void
+delete(SERVICE *service)
+{
+}
+
 int
 main(int argc, char *argv[])
 {
-    int option, sset = 0;
+    int option, sset = 0, flags = 0, c;
     char *base = DEFAULT_BASE;
     enum CMD cmd = LIST;
     enum TYPE stype;
@@ -75,6 +92,7 @@ main(int argc, char *argv[])
             break;
 
         case 'l':
+            flags = DBNG_RO;
             cmd = LIST;
             break;
 
@@ -87,6 +105,52 @@ main(int argc, char *argv[])
         fprintf(stderr, "a service must be specified with -s\n\n");
         usage();
     }
+
+    SERVICE *service = service_create(stype, flags, base);
+    if(service == NULL) {
+        errx(1, "could not create service");
+    }
+
+    switch(cmd) {
+    case LIST:
+        list(service);
+        break;
+        
+    case ADD:
+        add(service);
+        break;
+
+    case DELETE:
+        delete(service);
+        break;
+        
+    case TRUNCATE:
+        printf("Are you sure you want to truncate the database (y/n)? ");
+        while((c = getchar()) != EOF) {
+            switch(c) {
+            case 'y':
+                goto confirmed;
+
+            case 'n':
+                goto cleanup;
+
+            default:
+                printf("please type 'y' or 'n': ");
+                break;
+            }
+        }
+        
+    confirmed:
+        if(c == 'y') {
+            if(service->truncate(service) == 0) {
+                printf("database truncated...\n");
+            }
+        }
+        break;
+    }
+
+cleanup:
+    service_free(&service);
 
     return 0;
 }
