@@ -41,6 +41,11 @@ usage(void)
 static void
 list(SERVICE *service)
 {
+    KEY key;
+    REC rec;
+
+    while(service->next(service, &key, &rec) != DB_NOTFOUND)
+        service->print(service, &key, &rec);
 }
 
 static void

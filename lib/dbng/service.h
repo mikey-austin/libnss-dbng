@@ -41,6 +41,8 @@ struct SERVICE {
     int (*get)(SERVICE *, KEY *, REC *);
     int (*next)(SERVICE *, KEY *, REC *);
     int (*set)(SERVICE *, KEY *, REC *);
+    void (*print)(SERVICE *, const KEY *, const REC *);
+    int (*parse)(SERVICE *, const char *, KEY *, REC *);
     int (*delete)(SERVICE *, KEY *);
     int (*truncate)(SERVICE *);
     int (*start_txn)(SERVICE *);

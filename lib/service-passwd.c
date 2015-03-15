@@ -9,6 +9,8 @@
 
 #include "service-passwd.h"
 
+static void print(SERVICE *, const KEY *, const REC *);
+static int parse(SERVICE *, const char *, KEY *, REC *);
 static void pack_key(SERVICE *, const KEY *, DBT *);
 static void pack_rec(SERVICE *, const REC *, DBT *);
 static void unpack_key(SERVICE *, KEY *, const DBT *);
@@ -29,6 +31,8 @@ extern SERVICE
     service->sec = PASSWD_SEC;
 
     /* Set implemented functions. */
+    service->print = print;
+    service->parse = parse;
     service->key_creator = key_creator;
     service->pack_key = pack_key;
     service->unpack_key = unpack_key;
@@ -49,6 +53,26 @@ extern SERVICE
     service->rollback = service_rollback_txn;
 
     return (SERVICE *) service;
+}
+
+static void
+print(SERVICE *service, const KEY *key, const REC *rec)
+{
+    const PASSWD_KEY *pkey = (const PASSWD_KEY *) key;
+    const PASSWD_REC *prec = (const PASSWD_REC *) rec;
+
+    printf("%s:%s:%ld:%ld:%s:%s:%s\n",
+           prec->name, prec->passwd,
+           (unsigned long) prec->uid,
+           (unsigned long) prec->gid,
+           prec->gecos, prec->homedir,
+           prec->shell);
+}
+
+static int
+parse(SERVICE *service, const char *raw, KEY *key, REC *rec)
+{
+    return 0;
 }
 
 static int
