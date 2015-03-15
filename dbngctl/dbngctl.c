@@ -56,7 +56,7 @@ delete(SERVICE *service)
 int
 main(int argc, char *argv[])
 {
-    int option, sset = 0, flags = 0, c;
+    int option, sset = 0, flags = 0, c, prev = '\n';
     char *base = DEFAULT_BASE;
     enum CMD cmd = LIST;
     enum TYPE stype;
@@ -115,7 +115,7 @@ main(int argc, char *argv[])
     case LIST:
         list(service);
         break;
-        
+
     case ADD:
         add(service);
         break;
@@ -123,7 +123,7 @@ main(int argc, char *argv[])
     case DELETE:
         delete(service);
         break;
-        
+
     case TRUNCATE:
         printf("Are you sure you want to truncate the database (y/n)? ");
         while((c = getchar()) != EOF) {
@@ -132,14 +132,17 @@ main(int argc, char *argv[])
                 goto confirmed;
 
             case 'n':
+                printf("not truncating...\n");
                 goto cleanup;
 
             default:
-                printf("please type 'y' or 'n': ");
+                if(prev == '\n')
+                    printf("please type 'y' or 'n': ");
+                prev = c;
                 break;
             }
         }
-        
+
     confirmed:
         if(c == 'y') {
             if(service->truncate(service) == 0) {
