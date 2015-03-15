@@ -14,7 +14,7 @@
 #define NMATCH    7   /* A match per passwd column. */
 
 static void print(SERVICE *, const KEY *, const REC *);
-static int parse(SERVICE *, const char *, char *, size_t, KEY *, REC *);
+static int parse(SERVICE *, const char *, char *, size_t, KEY **, REC **);
 static void pack_key(SERVICE *, const KEY *, DBT *);
 static void pack_rec(SERVICE *, const REC *, DBT *);
 static void unpack_key(SERVICE *, KEY *, const DBT *);
@@ -75,10 +75,10 @@ print(SERVICE *service, const KEY *key, const REC *rec)
 
 static int
 parse(SERVICE *service, const char *raw, char *buf, size_t buf_size,
-      KEY *key, REC *rec)
+      KEY **key, REC **rec)
 {
-    PASSWD_KEY *pkey = (PASSWD_KEY *) key;
-    PASSWD_REC *prec = (PASSWD_REC *) rec;
+    static PASSWD_KEY pkey;
+    static PASSWD_REC prec;
     int ret, res = 0, i, len;
     regex_t regex;
     regmatch_t matches[NMATCH + 1];
@@ -87,11 +87,13 @@ parse(SERVICE *service, const char *raw, char *buf, size_t buf_size,
     char *p_buf = buf;
 
     memset(&regex, 0, sizeof(regex));
-    memset(pkey, 0, sizeof(*pkey));
-    memset(prec, 0, sizeof(*prec));
+    memset(&pkey, 0, sizeof(pkey));
+    memset(&prec, 0, sizeof(prec));
     memset(&buf, 0, sizeof(buf));
-    pkey->base.type = PRI;
-    prec->base.type = PASSWD;
+    *key = (KEY *) &pkey;
+    *rec = (REC *) &prec;
+    pkey.base.type = PRI;
+    prec.base.type = PASSWD;
 
     ret = regcomp(&regex,
                   "([^:]+):"        /* user. */
@@ -127,31 +129,31 @@ parse(SERVICE *service, const char *raw, char *buf, size_t buf_size,
 
             switch(i) {
             case 1:
-                pkey->data.pri = prec->name = p_buf;
+                pkey.data.pri = prec.name = p_buf;
                 break;
 
             case 2:
-                prec->passwd = p_buf;
+                prec.passwd = p_buf;
                 break;
 
             case 3:
-                prec->uid = atoi(p_buf);
+                prec.uid = atoi(p_buf);
                 break;
 
             case 4:
-                prec->gid = atoi(p_buf);
+                prec.gid = atoi(p_buf);
                 break;
 
             case 5:
-                prec->gecos = p_buf;
+                prec.gecos = p_buf;
                 break;
 
             case 6:
-                prec->homedir = p_buf;
+                prec.homedir = p_buf;
                 break;
 
             case 7:
-                prec->shell = p_buf;
+                prec.shell = p_buf;
                 break;
             }
 

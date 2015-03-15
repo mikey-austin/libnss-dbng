@@ -90,7 +90,7 @@ add(SERVICE *service)
 
         /* Now we have a non-empty line. */
         if(service->parse(service, sp, buf, sizeof(buf), &key, &rec) > 0
-            && service->set(service, &key, &rec) == 0)
+            && service->set(service, key, rec) == 0)
         {
             nparsed++;
         }
