@@ -51,6 +51,54 @@ list(SERVICE *service)
 static void
 add(SERVICE *service)
 {
+    KEY *key;
+    REC *rec;
+    char raw[SERVICE_REC_MAX];
+    char buf[SERVICE_REC_MAX];
+    char *sp, *dp;
+    int nparsed = 0, overflow = 0;
+
+    while(fgets(raw, sizeof(raw), stdin) != NULL) {
+        sp = raw;
+        if((dp = strchr(raw, '\n')) == NULL) {
+            overflow = 1;
+            continue;
+        }
+        else if(overflow) {
+            /* This is the tail end of an overly large line. */
+            overflow = 0;
+            continue;
+        }
+
+        /* Remove trailing white space. */
+        do {
+            dp--;
+        }
+        while(dp > sp && isspace(*dp));
+
+        if(dp == sp)
+            continue;
+        else
+            *(++dp) = '\0';
+
+        /* Remove leading white space and skip comments. */
+        while(sp != dp && isspace(*sp))
+            sp++ ;
+
+        if(*sp == '\0' || *sp == '#')
+            continue;
+
+        /* Now we have a non-empty line. */
+        if(service->parse(service, sp, buf, sizeof(buf), &key, &rec) > 0
+            && service->set(service, &key, &rec) == 0)
+        {
+            nparsed++;
+        }
+    }
+
+    if(nparsed > 0) {
+        printf("%d records added\n", nparsed);
+    }
 }
 
 static void

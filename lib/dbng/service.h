@@ -10,6 +10,8 @@
 
 #include <lib/dbng/dbng.h>
 
+#define SERVICE_REC_MAX 1024
+
 enum TYPE {
     PASSWD,
     SHADOW,
@@ -42,7 +44,7 @@ struct SERVICE {
     int (*next)(SERVICE *, KEY *, REC *);
     int (*set)(SERVICE *, KEY *, REC *);
     void (*print)(SERVICE *, const KEY *, const REC *);
-    int (*parse)(SERVICE *, const char *, KEY *, REC *);
+    int (*parse)(SERVICE *, const char *, char *, size_t, KEY *, REC *);
     int (*delete)(SERVICE *, KEY *);
     int (*truncate)(SERVICE *);
     int (*start_txn)(SERVICE *);

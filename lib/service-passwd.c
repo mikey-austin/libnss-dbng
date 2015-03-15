@@ -6,11 +6,15 @@
  */
 
 #include <string.h>
+#include <regex.h>
 
 #include "service-passwd.h"
 
+#define ERRBUFLEN 256
+#define NMATCH    7   /* A match per passwd column. */
+
 static void print(SERVICE *, const KEY *, const REC *);
-static int parse(SERVICE *, const char *, KEY *, REC *);
+static int parse(SERVICE *, const char *, char *, size_t, KEY *, REC *);
 static void pack_key(SERVICE *, const KEY *, DBT *);
 static void pack_rec(SERVICE *, const REC *, DBT *);
 static void unpack_key(SERVICE *, KEY *, const DBT *);
@@ -70,9 +74,96 @@ print(SERVICE *service, const KEY *key, const REC *rec)
 }
 
 static int
-parse(SERVICE *service, const char *raw, KEY *key, REC *rec)
+parse(SERVICE *service, const char *raw, char *buf, size_t buf_size,
+      KEY *key, REC *rec)
 {
-    return 0;
+    PASSWD_KEY *pkey = (PASSWD_KEY *) key;
+    PASSWD_REC *prec = (PASSWD_REC *) rec;
+    int ret, res = 0, i, len;
+    regex_t regex;
+    regmatch_t matches[NMATCH + 1];
+    char err_buf[ERRBUFLEN];
+    size_t remaining = buf_size;
+    char *p_buf = buf;
+
+    memset(&regex, 0, sizeof(regex));
+    memset(pkey, 0, sizeof(*pkey));
+    memset(prec, 0, sizeof(*prec));
+    memset(&buf, 0, sizeof(buf));
+    pkey->base.type = PRI;
+    prec->base.type = PASSWD;
+
+    ret = regcomp(&regex,
+                  "([^:]+):"        /* user. */
+                  "([^:]+):"        /* passwd. */
+                  "([[:digit:]]+):" /* uid. */
+                  "([[:digit:]]+):" /* gid. */
+                  "([^:]+):"        /* gecos. */
+                  "([^:]+):"        /* homedir. */
+                  "([^:]+)$",       /* shell. */
+                  REG_EXTENDED);
+    if(ret != 0) {
+        regerror(ret, &regex, err_buf, ERRBUFLEN);
+        warnx("regcomp: %s", err_buf);
+        goto cleanup;
+    }
+
+    ret = regexec(&regex, raw, NMATCH + 1, matches, 0);
+    if(ret != 0) {
+        regerror(ret, &regex, err_buf, ERRBUFLEN);
+        warnx("regcomp: %s", err_buf);
+        goto cleanup;
+    }
+    else {
+        /* Successful match. */
+        for(i = 1; i < NMATCH + 1; i++) {
+            len = matches[i].rm_eo - matches[i].rm_so;
+            if((remaining -= (len + 1)) <= 0) {
+                warnx("regexec: parsed record too large");
+                goto cleanup;
+            }
+            strncpy(p_buf, (raw + matches[i].rm_so), len);
+            p_buf[len] = '\0';
+
+            switch(i) {
+            case 1:
+                pkey->data.pri = prec->name = p_buf;
+                break;
+
+            case 2:
+                prec->passwd = p_buf;
+                break;
+
+            case 3:
+                prec->uid = atoi(p_buf);
+                break;
+
+            case 4:
+                prec->gid = atoi(p_buf);
+                break;
+
+            case 5:
+                prec->gecos = p_buf;
+                break;
+
+            case 6:
+                prec->homedir = p_buf;
+                break;
+
+            case 7:
+                prec->shell = p_buf;
+                break;
+            }
+
+            p_buf += (len + 1);
+        }
+
+        res = 1;
+    }
+
+cleanup:
+    regfree(&regex);
+    return res;
 }
 
 static int
