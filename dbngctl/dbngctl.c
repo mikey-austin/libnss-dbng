@@ -33,7 +33,7 @@ static void
 usage(void)
 {
     fprintf(stderr,
-            "usage: %s -s service [-b base] [-adtl]\n",
+            "usage: %s -s service [-b base] [-d key] [-atly]\n",
             PROGNAME);
     _exit(1);
 }
@@ -121,7 +121,7 @@ delete(SERVICE *service, const char *data)
 {
     KEY *key = service->new_key(service);
 
-    service->key_init(service, key, PRI, data);
+    service->key_init(service, key, PRI, (void *) data);
     if(service->delete(service, key) == 0) {
         printf("deleted %s\n", data);
     }
@@ -132,12 +132,12 @@ delete(SERVICE *service, const char *data)
 int
 main(int argc, char *argv[])
 {
-    int option, sset = 0, flags = 0, c, prev = '\n';
+    int option, sset = 0, flags = 0, c, prev = '\n', yes = 0;
     char *base = DEFAULT_BASE, *key;
     enum CMD cmd = LIST;
     enum TYPE stype;
 
-    while((option = getopt(argc, argv, "s:b:d:atl")) != -1) {
+    while((option = getopt(argc, argv, "s:b:d:atly")) != -1) {
         switch(option) {
         case 's':
             sset = 1;
@@ -153,6 +153,10 @@ main(int argc, char *argv[])
 
         case 'b':
             base = optarg;
+            break;
+
+        case 'y':
+            yes = 1;
             break;
 
         case 'a':
@@ -202,6 +206,11 @@ main(int argc, char *argv[])
         break;
 
     case TRUNCATE:
+        if(yes) {
+            c = 'y';
+            goto confirmed;
+        }
+
         printf("Are you sure you want to truncate the database (y/n)? ");
         while((c = getchar()) != EOF) {
             switch(c) {

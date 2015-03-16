@@ -6,6 +6,7 @@ AC_CONFIG_SRCDIR([lib/dbng.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PATH_PROG([VALGRIND], [valgrind])
+AC_PATH_PROG([BASH], [bash])
 
 # Checks for programs.
 AC_PROG_CC
@@ -45,6 +46,6 @@ else
 fi
 
 AC_CHECK_FUNCS([strerror])
-AC_CONFIG_FILES([Makefile lib/Makefile nss/Makefile check/Makefile dbngctl/Makefile check/test-wrapper])
+AC_CONFIG_FILES([Makefile lib/Makefile nss/Makefile check/Makefile dbngctl/Makefile check/test-wrapper check/test_dbngctl.sh])
 
 AC_OUTPUT

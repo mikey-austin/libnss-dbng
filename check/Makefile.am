@@ -1,6 +1,8 @@
 AM_CPPFLAGS = -DTEST_BASE='"$(TEST_BASE)"'
-TESTS = test_passwd_service test_nss_passwd
-LOG_COMPILER = sh ./test-wrapper
+TESTS = test_passwd_service test_nss_passwd test_dbngctl.sh
+TEST_EXTENSIONS = .sh
+LOG_COMPILER = $(BASH) ./test-wrapper
+SH_LOG_COMPILER = $(BASH)
 
 check_PROGRAMS = test_passwd_service test_nss_passwd
 test_passwd_service_LDADD = ../lib/libdbng.la
