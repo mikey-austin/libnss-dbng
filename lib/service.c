@@ -10,6 +10,7 @@
 #include "dbng/service.h"
 #include "dbng/utils.h"
 #include "service-passwd.h"
+#include "service-group.h"
 
 extern SERVICE
 *service_create(enum TYPE type, int flags, const char *base)
@@ -20,6 +21,10 @@ extern SERVICE
     {
     case PASSWD:
         service = service_passwd_create();
+        break;
+
+    case GROUP:
+        service = service_group_create();
         break;
 
     default:
@@ -164,7 +169,8 @@ service_start_txn(SERVICE *service)
     if(service->db->txn != NULL)
         return -1;
 
-    ret = service->db->env->txn_begin(service->db->env, NULL, &service->db->txn, 0);
+    ret = service->db->env->txn_begin(service->db->env, NULL,
+                                      &service->db->txn, 0);
     if(ret != 0)
         warnx("could not create transaction");
 

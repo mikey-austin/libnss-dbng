@@ -144,6 +144,9 @@ main(int argc, char *argv[])
             if(!strcasecmp(optarg, "passwd")) {
                 stype = PASSWD;
             }
+            else if(!strcasecmp(optarg, "group")) {
+                stype = GROUP;
+            }
             else {
                 fprintf(stderr, "unknown service %s\n\n", optarg);
                 usage();
