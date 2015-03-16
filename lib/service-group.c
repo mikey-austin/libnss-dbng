@@ -77,8 +77,12 @@ print(SERVICE *service, const KEY *key, const REC *rec)
            grec->name, grec->passwd,
            (unsigned long) grec->gid);
 
-    for(member = grec->members, i = 0; *member != NULL; member++, i++)
+    for(member = grec->members, i = 0;
+        member != NULL && *member != NULL;
+        member++, i++)
+    {
         printf("%s%s", (i > 0 ? "," : ""), *member);
+    }
 
     printf("\n");
 }
@@ -94,7 +98,7 @@ parse(SERVICE *service, const char *raw, KEY *key, REC *rec)
     char err_buf[ERRBUFLEN];
     static char buf[SERVICE_REC_MAX];
     size_t remaining = sizeof(buf);
-    char *p_buf = buf, *c_buf;
+    char *p_buf = buf, *c_buf, *member;
 
     memset(&regex, 0, sizeof(regex));
     memset(gkey, 0, sizeof(*gkey));
@@ -107,7 +111,7 @@ parse(SERVICE *service, const char *raw, KEY *key, REC *rec)
                   "([^:]+):"        /* group. */
                   "([^:]+):"        /* passwd. */
                   "([[:digit:]]+):" /* gid. */
-                  "([^:]+)$",       /* members. */
+                  "([^:]*)$",       /* members (may be empty). */
                   REG_EXTENDED);
     if(ret != 0) {
         regerror(ret, &regex, err_buf, ERRBUFLEN);
@@ -152,23 +156,36 @@ parse(SERVICE *service, const char *raw, KEY *key, REC *rec)
         }
 
         /* Count the number of members by counting the number of commas. */
-        grec->count = (strlen(p_buf) > 0 ? 1 : 0);
-        c_buf = strchr(p_buf + matches[4].rm_so, ',');
+        grec->count = (strlen(raw + matches[4].rm_so) > 0 ? 1 : 0);
+        c_buf = strchr(raw + matches[4].rm_so, ',');
         while(c_buf != NULL) {
             grec->count++;
             c_buf = strchr(++c_buf, ',');
         }
 
-        len = (grec->count * sizeof(char *)) + 1;
+        len = ((grec->count + 1) * sizeof(char *));
         remaining -= len;
         if(grec->count > 0 && remaining > 0) {
+            /* Reserve space for pointers. */
             grec->members = (char **) p_buf;
             p_buf += len;
 
-            for(i = 0; remaining > 0 && i < grec->count; i++) {
+            /* Copy the actual strings. */
+            len = strlen(raw + matches[4].rm_so);
+            char members[len + 1];
+            strcpy(members, raw + matches[4].rm_so);
+            members[len] = '\0';
+
+            for(i = 0, member = strtok(members, ",");
+                remaining > 0 && i < grec->count && member != NULL;
+                i++, member = strtok(NULL, ","))
+            {
                 grec->members[i] = p_buf;
-                p_buf += (len = (strlen(grec->members[i]) + 1));
-                remaining -= len;
+                strcpy(p_buf, member);
+                len = strlen(member);
+                p_buf[len] = '\0';
+                p_buf += (len + 1);
+                remaining -= (len + 1);
             }
         }
 
@@ -224,12 +241,16 @@ rec_size(SERVICE *service, const REC *rec)
     char **member;
 
     size = sizeof(grec->gid)
-        + (grec->count * sizeof(char *)) + 1
+        + ((grec->count + 1) * sizeof(char *))
         + strlen(grec->name) + 1
         + strlen(grec->passwd) + 1;
 
-    for(member = grec->members; *member != NULL; member++)
+    for(member = grec->members;
+        member != NULL && *member != NULL;
+        member++)
+    {
         size += strlen(*member) + 1;
+    }
 
     return size;
 }
@@ -295,10 +316,13 @@ pack_rec(SERVICE *service, const REC *rec, DBT *dbrec)
     s += slen;
 
     /* Reserve space for count and member pointers. */
-    memcpy(s, &grec->count, sizeof(grec->count));
-    s += slen + (grec->count * sizeof(char *)) + 1;
+    memcpy(s, &grec->count, (slen = sizeof(grec->count)));
+    s += slen + ((grec->count + 1)* sizeof(char *));
 
-    for(member = grec->members; *member != NULL; member++) {
+    for(member = grec->members;
+        member != NULL && *member != NULL;
+        member++)
+    {
         memcpy(s, *member, (slen = (strlen(*member) + 1)));
         s += slen;
     }
@@ -356,7 +380,7 @@ unpack_rec(SERVICE *service, REC *rec, const DBT *dbrec)
     remaining -= sizeof(grec->count);
 
     grec->members = (char **) buf;
-    buf += (len = (grec->count * sizeof(char *)) + 1);
+    buf += (len = ((grec->count + 1) * sizeof(char *)));
     remaining -= len;
 
     for(i = 0; i < grec->count && remaining > 0; i++) {
