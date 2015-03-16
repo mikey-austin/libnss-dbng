@@ -77,7 +77,7 @@ print(SERVICE *service, const KEY *key, const REC *rec)
            grec->name, grec->passwd,
            (unsigned long) grec->gid);
 
-    for(member = grec->members, i = 0; member != NULL; member++, i++)
+    for(member = grec->members, i = 0; *member != NULL; member++, i++)
         printf("%s%s", (i > 0 ? "," : ""), *member);
 
     printf("\n");
@@ -220,15 +220,15 @@ static size_t
 rec_size(SERVICE *service, const REC *rec)
 {
     GROUP_REC *grec = (GROUP_REC *) rec;
-    size_t size = 0;
+    size_t size;
     char **member;
 
-    size += sizeof(grec->gid)
-        + grec->count + 1
+    size = sizeof(grec->gid)
+        + (grec->count * sizeof(char *)) + 1
         + strlen(grec->name) + 1
         + strlen(grec->passwd) + 1;
 
-    for(member = grec->members; member != NULL; member++)
+    for(member = grec->members; *member != NULL; member++)
         size += strlen(*member) + 1;
 
     return size;
@@ -298,7 +298,7 @@ pack_rec(SERVICE *service, const REC *rec, DBT *dbrec)
     memcpy(s, &grec->count, sizeof(grec->count));
     s += slen + (grec->count * sizeof(char *)) + 1;
 
-    for(member = grec->members; member != NULL; member++) {
+    for(member = grec->members; *member != NULL; member++) {
         memcpy(s, *member, (slen = (strlen(*member) + 1)));
         s += slen;
     }
