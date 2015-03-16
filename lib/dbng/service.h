@@ -44,7 +44,7 @@ struct SERVICE {
     int (*next)(SERVICE *, KEY *, REC *);
     int (*set)(SERVICE *, KEY *, REC *);
     void (*print)(SERVICE *, const KEY *, const REC *);
-    int (*parse)(SERVICE *, const char *, char *, size_t, KEY **, REC **);
+    int (*parse)(SERVICE *, const char *, KEY *, REC *);
     int (*delete)(SERVICE *, KEY *);
     int (*truncate)(SERVICE *);
     int (*start_txn)(SERVICE *);
@@ -52,6 +52,8 @@ struct SERVICE {
     int (*rollback)(SERVICE *);
     size_t (*rec_size)(SERVICE *, const REC *);
     size_t (*key_size)(SERVICE *, const KEY *);
+    KEY *(*new_key)(SERVICE *);
+    REC *(*new_rec)(SERVICE *);
     void (*pack_key)(SERVICE *, const KEY *, DBT *);
     void (*pack_rec)(SERVICE *, const REC *, DBT *);
     void (*unpack_key)(SERVICE *, KEY *, const DBT *);

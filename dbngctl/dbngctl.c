@@ -41,22 +41,28 @@ usage(void)
 static void
 list(SERVICE *service)
 {
-    KEY key;
-    REC rec;
+    KEY *key = service->new_key(service);
+    REC *rec = service->new_rec(service);
 
-    while(service->next(service, &key, &rec) != DB_NOTFOUND)
-        service->print(service, &key, &rec);
+    service->start_txn(service);
+    while(service->next(service, key, rec) != DB_NOTFOUND)
+        service->print(service, key, rec);
+    service->commit(service);
+
+    xfree(&key);
+    xfree(&rec);
 }
 
 static void
 add(SERVICE *service)
 {
-    KEY *key;
-    REC *rec;
+    KEY *key = service->new_key(service);
+    REC *rec = service->new_rec(service);
     char raw[SERVICE_REC_MAX];
-    char buf[SERVICE_REC_MAX];
     char *sp, *dp;
-    int nparsed = 0, overflow = 0;
+    int nparsed = 0, nfailed = 0, overflow = 0;
+
+    service->start_txn(service);
 
     while(fgets(raw, sizeof(raw), stdin) != NULL) {
         sp = raw;
@@ -81,24 +87,33 @@ add(SERVICE *service)
         else
             *(++dp) = '\0';
 
-        /* Remove leading white space and skip comments. */
+        /* Remove leading white space. */
         while(sp != dp && isspace(*sp))
             sp++ ;
 
-        if(*sp == '\0' || *sp == '#')
+        if(*sp == '\0')
             continue;
 
         /* Now we have a non-empty line. */
-        if(service->parse(service, sp, buf, sizeof(buf), &key, &rec) > 0
+        if(service->parse(service, sp, key, rec) > 0
             && service->set(service, key, rec) == 0)
         {
             nparsed++;
         }
+        else {
+            printf("failed --> %s\n", sp);
+            nfailed++;
+        }
     }
 
-    if(nparsed > 0) {
-        printf("%d records added\n", nparsed);
+    service->commit(service);
+
+    if(nparsed > 0 || nfailed > 0) {
+        printf("%d added, %d failed\n", nparsed, nfailed);
     }
+
+    xfree(&key);
+    xfree(&rec);
 }
 
 static void

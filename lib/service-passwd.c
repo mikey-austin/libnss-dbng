@@ -14,7 +14,9 @@
 #define NMATCH    7   /* A match per passwd column. */
 
 static void print(SERVICE *, const KEY *, const REC *);
-static int parse(SERVICE *, const char *, char *, size_t, KEY **, REC **);
+static int parse(SERVICE *, const char *, KEY *, REC *);
+static KEY *new_key(SERVICE *);
+static REC *new_rec(SERVICE *);
 static void pack_key(SERVICE *, const KEY *, DBT *);
 static void pack_rec(SERVICE *, const REC *, DBT *);
 static void unpack_key(SERVICE *, KEY *, const DBT *);
@@ -44,6 +46,8 @@ extern SERVICE
     service->unpack_rec = unpack_rec;
     service->rec_size = rec_size;
     service->key_size = key_size;
+    service->new_key = new_key;
+    service->new_rec = new_rec;
     service->cleanup = NULL;
 
     /* Set inherited functions. */
@@ -74,33 +78,31 @@ print(SERVICE *service, const KEY *key, const REC *rec)
 }
 
 static int
-parse(SERVICE *service, const char *raw, char *buf, size_t buf_size,
-      KEY **key, REC **rec)
+parse(SERVICE *service, const char *raw, KEY *key, REC *rec)
 {
-    static PASSWD_KEY pkey;
-    static PASSWD_REC prec;
+    PASSWD_KEY *pkey = (PASSWD_KEY *) key;
+    PASSWD_REC *prec = (PASSWD_REC *) rec;
     int ret, res = 0, i, len;
     regex_t regex;
     regmatch_t matches[NMATCH + 1];
     char err_buf[ERRBUFLEN];
-    size_t remaining = buf_size;
+    static char buf[SERVICE_REC_MAX];
+    size_t remaining = sizeof(buf);
     char *p_buf = buf;
 
     memset(&regex, 0, sizeof(regex));
-    memset(&pkey, 0, sizeof(pkey));
-    memset(&prec, 0, sizeof(prec));
+    memset(pkey, 0, sizeof(*pkey));
+    memset(prec, 0, sizeof(*prec));
     memset(&buf, 0, sizeof(buf));
-    *key = (KEY *) &pkey;
-    *rec = (REC *) &prec;
-    pkey.base.type = PRI;
-    prec.base.type = PASSWD;
+    pkey->base.type = PRI;
+    prec->base.type = PASSWD;
 
     ret = regcomp(&regex,
                   "([^:]+):"        /* user. */
                   "([^:]+):"        /* passwd. */
                   "([[:digit:]]+):" /* uid. */
                   "([[:digit:]]+):" /* gid. */
-                  "([^:]+):"        /* gecos. */
+                  "([^:]*):"        /* gecos (may be empty). */
                   "([^:]+):"        /* homedir. */
                   "([^:]+)$",       /* shell. */
                   REG_EXTENDED);
@@ -112,8 +114,10 @@ parse(SERVICE *service, const char *raw, char *buf, size_t buf_size,
 
     ret = regexec(&regex, raw, NMATCH + 1, matches, 0);
     if(ret != 0) {
-        regerror(ret, &regex, err_buf, ERRBUFLEN);
-        warnx("regcomp: %s", err_buf);
+        if(ret != REG_NOMATCH) {
+            regerror(ret, &regex, err_buf, ERRBUFLEN);
+            warnx("regcomp: %s", err_buf);
+        }
         goto cleanup;
     }
     else {
@@ -129,31 +133,31 @@ parse(SERVICE *service, const char *raw, char *buf, size_t buf_size,
 
             switch(i) {
             case 1:
-                pkey.data.pri = prec.name = p_buf;
+                pkey->data.pri = prec->name = p_buf;
                 break;
 
             case 2:
-                prec.passwd = p_buf;
+                prec->passwd = p_buf;
                 break;
 
             case 3:
-                prec.uid = atoi(p_buf);
+                prec->uid = atoi(p_buf);
                 break;
 
             case 4:
-                prec.gid = atoi(p_buf);
+                prec->gid = atoi(p_buf);
                 break;
 
             case 5:
-                prec.gecos = p_buf;
+                prec->gecos = p_buf;
                 break;
 
             case 6:
-                prec.homedir = p_buf;
+                prec->homedir = p_buf;
                 break;
 
             case 7:
-                prec.shell = p_buf;
+                prec->shell = p_buf;
                 break;
             }
 
@@ -166,6 +170,18 @@ parse(SERVICE *service, const char *raw, char *buf, size_t buf_size,
 cleanup:
     regfree(&regex);
     return res;
+}
+
+static KEY
+*new_key(SERVICE *service)
+{
+    return xmalloc(sizeof(PASSWD_KEY));
+}
+
+static REC
+*new_rec(SERVICE *service)
+{
+    return xmalloc(sizeof(PASSWD_REC));
 }
 
 static int
