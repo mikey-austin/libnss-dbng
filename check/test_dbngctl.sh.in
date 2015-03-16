@@ -1,0 +1,83 @@
+# Run tests through valgrind if it exists.
+
+VALGRIND="@VALGRIND@"
+BASE="/tmp/test_dbngctl_base"
+CMD="../dbngctl/dbngctl -b $BASE"
+
+if [ -x $VALGRIND ]; then
+    CMD="$VALGRIND -q --trace-children=yes --track-origins=yes --leak-check=full --error-exitcode=1 --tool=memcheck $CMD"
+fi
+
+function run() {
+    $CMD $@
+    if [ "$?" != "0" ]; then
+        exit 1;
+    fi
+}
+
+# Set up the db base.
+if [ -d $BASE ]; then
+    rm -f $BASE/*
+else
+    mkdir $BASE
+fi
+
+# Add a few passwd entries.
+run -s passwd -a <<EOF
+mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+mikey:x:1000:1000:Mikey Austin:/home/mikey:/bin/bash
+tcpdump:x:72:72::/:/sbin/nologin
+EOF
+
+count=$(run -s passwd |wc -l)
+if [ "$count" != "3" ]; then
+    echo "expecting 3 passwd entries"
+    exit 1
+fi
+
+# Delete a single entry.
+run -s passwd -d "tcpdump"
+count=$(run -s passwd |wc -l)
+if [ "$count" != "2" ]; then
+    echo "expecting 2 passwd entries"
+    exit 1
+fi
+
+# Truncate.
+run -s passwd -ty
+count=$(run -s passwd |wc -l)
+if [ "$count" != "0" ]; then
+    echo "expecting no passwd entries"
+    exit 1
+fi
+
+# Add a few group entries.
+run -s group -a <<EOF
+lightdm:x:993:
+lock:x:54:mikey,dexter,gordon
+lp:x:7:
+EOF
+
+count=$(run -s group |wc -l)
+if [ "$count" != "3" ]; then
+    echo "expecting 3 group entries"
+    exit 1
+fi
+
+# Delete a single entry.
+run -s group -d "lock"
+count=$(run -s group |wc -l)
+if [ "$count" != "2" ]; then
+    echo "expecting 2 group entries"
+    exit 1
+fi
+
+# Truncate.
+run -s group -ty
+count=$(run -s group |wc -l)
+if [ "$count" != "0" ]; then
+    echo "expecting no group entries"
+    exit 1
+fi
+
+exit 0

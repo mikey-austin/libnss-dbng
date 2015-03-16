@@ -38,4 +38,5 @@ m4*
 check/test-wrapper
 check/test_*
 !check/test_*.c
+!check/test_*.in
 dbngctl
