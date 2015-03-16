@@ -17,6 +17,7 @@ static void print(SERVICE *, const KEY *, const REC *);
 static int parse(SERVICE *, const char *, KEY *, REC *);
 static KEY *new_key(SERVICE *);
 static REC *new_rec(SERVICE *);
+static void key_init(SERVICE *, KEY *, enum KEY_TYPE, void *);
 static void pack_key(SERVICE *, const KEY *, DBT *);
 static void pack_rec(SERVICE *, const REC *, DBT *);
 static void unpack_key(SERVICE *, KEY *, const DBT *);
@@ -48,6 +49,7 @@ extern SERVICE
     service->key_size = key_size;
     service->new_key = new_key;
     service->new_rec = new_rec;
+    service->key_init = key_init;
     service->cleanup = NULL;
 
     /* Set inherited functions. */
@@ -182,6 +184,14 @@ static REC
 *new_rec(SERVICE *service)
 {
     return xmalloc(sizeof(PASSWD_REC));
+}
+
+static void
+key_init(SERVICE *service, KEY *key, enum KEY_TYPE type, void *data)
+{
+    PASSWD_KEY *pkey = (PASSWD_KEY *) key;
+    pkey->base.type = type;
+    pkey->data.pri = (char *) data;
 }
 
 static int

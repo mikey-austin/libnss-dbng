@@ -20,7 +20,7 @@ extern char *optarg;
 static void usage(void);
 static void list(SERVICE *);
 static void add(SERVICE *);
-static void delete(SERVICE *);
+static void delete(SERVICE *, const char *);
 
 enum CMD {
     ADD,
@@ -117,19 +117,27 @@ add(SERVICE *service)
 }
 
 static void
-delete(SERVICE *service)
+delete(SERVICE *service, const char *data)
 {
+    KEY *key = service->new_key(service);
+
+    service->key_init(service, key, PRI, data);
+    if(service->delete(service, key) == 0) {
+        printf("deleted %s\n", data);
+    }
+
+    xfree(&key);
 }
 
 int
 main(int argc, char *argv[])
 {
     int option, sset = 0, flags = 0, c, prev = '\n';
-    char *base = DEFAULT_BASE;
+    char *base = DEFAULT_BASE, *key;
     enum CMD cmd = LIST;
     enum TYPE stype;
 
-    while((option = getopt(argc, argv, "s:b:adtl")) != -1) {
+    while((option = getopt(argc, argv, "s:b:d:atl")) != -1) {
         switch(option) {
         case 's':
             sset = 1;
@@ -153,6 +161,7 @@ main(int argc, char *argv[])
 
         case 'd':
             cmd = DELETE;
+            key = optarg;
             break;
 
         case 't':
@@ -189,7 +198,7 @@ main(int argc, char *argv[])
         break;
 
     case DELETE:
-        delete(service);
+        delete(service, key);
         break;
 
     case TRUNCATE:

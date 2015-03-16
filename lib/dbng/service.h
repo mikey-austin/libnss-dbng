@@ -54,6 +54,7 @@ struct SERVICE {
     size_t (*key_size)(SERVICE *, const KEY *);
     KEY *(*new_key)(SERVICE *);
     REC *(*new_rec)(SERVICE *);
+    void (*key_init)(SERVICE *, KEY *, enum KEY_TYPE, void *);
     void (*pack_key)(SERVICE *, const KEY *, DBT *);
     void (*pack_rec)(SERVICE *, const REC *, DBT *);
     void (*unpack_key)(SERVICE *, KEY *, const DBT *);
