@@ -109,7 +109,7 @@ add(SERVICE *service)
     service->commit(service);
 
     if(nparsed > 0 || nfailed > 0) {
-        printf("%d added, %d failed\n", nparsed, nfailed);
+        printf("%d parsed, %d failed\n", nparsed, nfailed);
     }
 
     xfree(&key);

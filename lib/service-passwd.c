@@ -248,11 +248,13 @@ pack_key(SERVICE *service, const KEY *key, DBT *dbkey)
 
     switch(pkey->base.type) {
     case PRI:
-        memcpy(buf + sizeof(pkey->base.type), pkey->data.pri, strlen(pkey->data.pri) + 1);
+        memcpy(buf + sizeof(pkey->base.type), pkey->data.pri,
+               strlen(pkey->data.pri) + 1);
         break;
 
     case SEC:
-        memcpy(buf + sizeof(pkey->base.type), &pkey->data.sec, sizeof(pkey->data.sec));
+        memcpy(buf + sizeof(pkey->base.type), &pkey->data.sec,
+               sizeof(pkey->data.sec));
         break;
     }
 
