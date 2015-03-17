@@ -10,6 +10,7 @@
 #include "dbng/service.h"
 #include "dbng/utils.h"
 #include "service-passwd.h"
+#include "service-shadow.h"
 #include "service-group.h"
 
 extern SERVICE
@@ -21,6 +22,10 @@ extern SERVICE
     {
     case PASSWD:
         service = service_passwd_create();
+        break;
+
+    case SHADOW:
+        service = service_shadow_create();
         break;
 
     case GROUP:
