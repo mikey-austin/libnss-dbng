@@ -147,27 +147,27 @@ parse(SERVICE *service, const char *raw, KEY *key, REC *rec)
                 break;
 
             case 3:
-                srec->lstchg = atoi(p_buf);
+                srec->lstchg = (len == 0 ? -1 : atoi(p_buf));
                 break;
 
             case 4:
-                srec->min = atoi(p_buf);
+                srec->min = (len == 0 ? -1 : atoi(p_buf));
                 break;
 
             case 5:
-                srec->max = atoi(p_buf);
+                srec->max = (len == 0 ? -1 : atoi(p_buf));
                 break;
 
             case 6:
-                srec->warn = atoi(p_buf);
+                srec->warn = (len == 0 ? -1 : atoi(p_buf));
                 break;
 
             case 7:
-                srec->inact = atoi(p_buf);
+                srec->inact = (len == 0 ? -1 : atoi(p_buf));
                 break;
 
             case 8:
-                srec->expire = atoi(p_buf);
+                srec->expire = (len == 0 ? -1 : atoi(p_buf));
                 break;
             }
 
