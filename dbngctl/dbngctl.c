@@ -144,6 +144,9 @@ main(int argc, char *argv[])
             if(!strcasecmp(optarg, "passwd")) {
                 stype = PASSWD;
             }
+            else if(!strcasecmp(optarg, "shadow")) {
+                stype = SHADOW;
+            }
             else if(!strcasecmp(optarg, "group")) {
                 stype = GROUP;
             }
