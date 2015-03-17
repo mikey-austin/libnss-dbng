@@ -22,7 +22,7 @@ main(int argc, char *argv[])
     int _result = PASS, ret;
     SERVICE *shadow;
 
-    shadow = service_create(SHADOW, 0, TEST_BASE);
+    shadow = service_create(TYPE_SHADOW, 0, TEST_BASE);
     if(shadow == NULL) {
         warnx("shadow service is NULL");
         return FAIL;
@@ -48,7 +48,7 @@ main(int argc, char *argv[])
     key.data.pri = "test-dbng-user";
 
     SHADOW_REC rec;
-    rec.base.type = SHADOW;
+    rec.base.type = TYPE_SHADOW;
     rec.name = "test-dbng-user";
     rec.passwd = "$6$nLngwds2$kQ70NzYAGfo2QFubQwoUChcweCkaTVl8eL7Sj.zCn9A0Q8p3UNmty44NuQGR6GvzaiKz4N.VNMdfEpc7NoJ3/1";
     rec.lstchg = 16511;
@@ -127,7 +127,7 @@ main(int argc, char *argv[])
     key2.base.type = PRI;
     key2.data.pri = "another-test-dbng-user";
 
-    rec2.base.type = SHADOW;
+    rec2.base.type = TYPE_SHADOW;
     rec2.name = "another-test-dbng-user";
     rec2.passwd = "$6$nLngwds2$kQ70NzYAGfo2QFubQwoUChcweCkaTVl8eL7Sj.zCn9A0Q8p3UNmty44NuQGR6GvzaiKz4N.VNMdfEpc7NoJ3/1";
     rec2.lstchg = 16511;

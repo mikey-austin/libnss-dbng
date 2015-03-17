@@ -33,7 +33,7 @@ extern SERVICE
 
     service = xmalloc(sizeof(*service));
     memset(service, 0, sizeof(*service));
-    service->type = PASSWD;
+    service->type = TYPE_PASSWD;
     service->pri = PASSWD_PRI;
     service->sec = PASSWD_SEC;
 
@@ -97,7 +97,7 @@ parse(SERVICE *service, const char *raw, KEY *key, REC *rec)
     memset(prec, 0, sizeof(*prec));
     memset(&buf, 0, sizeof(buf));
     pkey->base.type = PRI;
-    prec->base.type = PASSWD;
+    prec->base.type = TYPE_PASSWD;
 
     ret = regcomp(&regex,
                   "([^:]+):"        /* user. */
@@ -328,7 +328,7 @@ unpack_rec(SERVICE *service, REC *rec, const DBT *dbrec)
     char *buf = (char *) dbrec->data;
 
     memset(prec, 0, sizeof(*prec));
-    prec->base.type = PASSWD;
+    prec->base.type = TYPE_PASSWD;
 
     memcpy(&prec->uid, buf, sizeof(prec->uid));
     buf += sizeof(prec->uid);

@@ -17,17 +17,18 @@
 
 #define NSS_DBNG_LOCK()                \
     do {                               \
-        pthread_mutex_lock(&_mutex);   \
+        pthread_mutex_lock(&pmutex);   \
     } while (0)
 #define NSS_DBNG_UNLOCK()              \
     do {                               \
-        pthread_mutex_unlock(&_mutex); \
+        pthread_mutex_unlock(&pmutex); \
     } while (0)
 
-static pthread_mutex_t _mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t pmutex = PTHREAD_MUTEX_INITIALIZER;
 static SERVICE *_service = NULL;
 
-static enum nss_status fill_passwd(struct passwd *, char *, size_t, SERVICE *, PASSWD_REC *, int *);
+static enum nss_status fill_passwd(struct passwd *, char *, size_t,
+                                   SERVICE *, PASSWD_REC *, int *);
 
 /**
  *
@@ -44,7 +45,7 @@ _nss_dbng_setpwent(void)
         goto cleanup;
     }
 
-    if((_service = service_create(PASSWD, DBNG_RO, DEFAULT_BASE)) == NULL) {
+    if((_service = service_create(TYPE_PASSWD, DBNG_RO, DEFAULT_BASE)) == NULL) {
         NSS_DEBUG("could not create passwd service object");
         status = NSS_STATUS_UNAVAIL;
         goto cleanup;
@@ -133,15 +134,15 @@ _nss_dbng_getpwnam_r(const char* name, struct passwd *pwbuf,
     int res;
     enum nss_status status;
 
-    NSS_DBNG_LOCK();
-
-    if((passwd = service_create(PASSWD, DBNG_RO, DEFAULT_BASE)) == NULL) {
+    if((passwd = service_create(TYPE_PASSWD, DBNG_RO, DEFAULT_BASE)) == NULL) {
         NSS_DEBUG("could not create passwd service object");
         return NSS_STATUS_UNAVAIL;
     }
 
+    char uname[strlen(name) + 1];
+    strcpy(uname, name);
+    key.data.pri = uname;
     key.base.type = PRI;
-    key.data.pri = (char *) name; // I know.
 
     res = passwd->get(passwd, (KEY *) &key, (REC *) &rec);
     switch(res) {
@@ -164,8 +165,6 @@ _nss_dbng_getpwnam_r(const char* name, struct passwd *pwbuf,
 
 cleanup:
     service_free(&passwd);
-    NSS_DBNG_UNLOCK();
-
     return status;
 }
 
@@ -182,9 +181,7 @@ _nss_dbng_getpwuid_r(uid_t uid, struct passwd *pwbuf,
     int res;
     enum nss_status status;
 
-    NSS_DBNG_LOCK();
-
-    if((passwd = service_create(PASSWD, DBNG_RO, DEFAULT_BASE)) == NULL) {
+    if((passwd = service_create(TYPE_PASSWD, DBNG_RO, DEFAULT_BASE)) == NULL) {
         NSS_DEBUG("could not create passwd service object");
         *errnop = ENOENT;
         return NSS_STATUS_UNAVAIL;
@@ -214,9 +211,6 @@ _nss_dbng_getpwuid_r(uid_t uid, struct passwd *pwbuf,
 
 cleanup:
     service_free(&passwd);
-
-    NSS_DBNG_UNLOCK();
-
     return status;
 }
 

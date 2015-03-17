@@ -142,13 +142,13 @@ main(int argc, char *argv[])
         case 's':
             sset = 1;
             if(!strcasecmp(optarg, "passwd")) {
-                stype = PASSWD;
+                stype = TYPE_PASSWD;
             }
             else if(!strcasecmp(optarg, "shadow")) {
-                stype = SHADOW;
+                stype = TYPE_SHADOW;
             }
             else if(!strcasecmp(optarg, "group")) {
-                stype = GROUP;
+                stype = TYPE_GROUP;
             }
             else {
                 fprintf(stderr, "unknown service %s\n\n", optarg);

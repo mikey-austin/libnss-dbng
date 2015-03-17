@@ -22,7 +22,7 @@ main(int argc, char *argv[])
     int _result = PASS, ret;
     SERVICE *group;
 
-    group = service_create(GROUP, 0, TEST_BASE);
+    group = service_create(TYPE_GROUP, 0, TEST_BASE);
     if(group == NULL) {
         warnx("group service is NULL");
         return FAIL;
@@ -51,7 +51,7 @@ main(int argc, char *argv[])
 
     GROUP_REC rec;
     char *group1_members[4] = { "member1", "member2", "member3", NULL };
-    rec.base.type = GROUP;
+    rec.base.type = TYPE_GROUP;
     rec.gid = 1001;
     rec.name = "test-dbng-group";
     rec.passwd = "x";
@@ -167,7 +167,7 @@ main(int argc, char *argv[])
     key2.base.type = PRI;
     key2.data.pri = "another-test-dbng-group";
 
-    rec2.base.type = GROUP;
+    rec2.base.type = TYPE_GROUP;
     rec2.gid = 2001;
     rec2.name = "another-test-dbng-group";
     rec2.passwd = "x";

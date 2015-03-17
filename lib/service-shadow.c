@@ -35,7 +35,7 @@ extern SERVICE
 
     service = xmalloc(sizeof(*service));
     memset(service, 0, sizeof(*service));
-    service->type = SHADOW;
+    service->type = TYPE_SHADOW;
     service->pri = SHADOW_PRI;
     service->sec = NULL;
 
@@ -100,7 +100,7 @@ parse(SERVICE *service, const char *raw, KEY *key, REC *rec)
     memset(srec, 0, sizeof(*srec));
     memset(&buf, 0, sizeof(buf));
     skey->base.type = PRI;
-    srec->base.type = SHADOW;
+    srec->base.type = TYPE_SHADOW;
 
     ret = regcomp(&regex,
                   "([^:]+):"          /* user. */
@@ -303,7 +303,7 @@ unpack_rec(SERVICE *service, REC *rec, const DBT *dbrec)
     char *buf = (char *) dbrec->data;
 
     memset(srec, 0, sizeof(*srec));
-    srec->base.type = SHADOW;
+    srec->base.type = TYPE_SHADOW;
 
     srec->name = buf;
     buf += strlen(srec->name) + 1;

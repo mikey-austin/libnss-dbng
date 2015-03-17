@@ -13,9 +13,9 @@
 #define SERVICE_REC_MAX 1024
 
 enum TYPE {
-    PASSWD,
-    SHADOW,
-    GROUP
+    TYPE_PASSWD,
+    TYPE_SHADOW,
+    TYPE_GROUP
 };
 
 enum KEY_TYPE {

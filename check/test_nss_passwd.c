@@ -23,7 +23,7 @@ main(int argc, char *argv[])
 {
     int result = PASS, errnop;
     enum nss_status status;
-    
+
     if((result = setup_db()) != PASS)
         goto err;
 
@@ -41,7 +41,8 @@ main(int argc, char *argv[])
     }
 
     /* Now with a non-existant user. */
-    status = _nss_dbng_getpwnam_r("non-existant-user-name", &pwbuf, buf, MAX_BUF, &errnop);
+    status = _nss_dbng_getpwnam_r("non-existant-user-name", &pwbuf, buf,
+                                  MAX_BUF, &errnop);
     if(status != NSS_STATUS_NOTFOUND) {
         warnx("expected to not find the user");
         result = FAIL;
@@ -173,7 +174,7 @@ main(int argc, char *argv[])
             warnx("unexpected uid: %d", pwbuf.pw_uid);
             goto err;
         }
-        
+
         memset(&pwbuf, 0, sizeof(pwbuf));
         memset(buf, 0, sizeof(buf));
     }
@@ -211,7 +212,7 @@ setup_db(void)
     int result = PASS, ret;
     SERVICE *passwd;
 
-    passwd = service_create(PASSWD, 0, TEST_BASE);
+    passwd = service_create(TYPE_PASSWD, 0, TEST_BASE);
     if(passwd == NULL) {
         warnx("passwd service is NULL");
         return FAIL;
@@ -239,7 +240,7 @@ setup_db(void)
     key.base.type = PRI;
     key.data.pri = "test-dbng-user";
 
-    rec.base.type = PASSWD;
+    rec.base.type = TYPE_PASSWD;
     rec.uid = 1001;
     rec.gid = 1101;
     rec.name = "test-dbng-user";
@@ -253,7 +254,7 @@ setup_db(void)
     key2.base.type = PRI;
     key2.data.pri = "another-test-dbng-user";
 
-    rec2.base.type = PASSWD;
+    rec2.base.type = TYPE_PASSWD;
     rec2.uid = 2001;
     rec2.gid = 2101;
     rec2.name = "another-test-dbng-user";
@@ -267,7 +268,7 @@ setup_db(void)
     key3.base.type = PRI;
     key3.data.pri = "yet-another-test-dbng-user";
 
-    rec3.base.type = PASSWD;
+    rec3.base.type = TYPE_PASSWD;
     rec3.uid = 3001;
     rec3.gid = 3101;
     rec3.name = "yet-another-test-dbng-user";

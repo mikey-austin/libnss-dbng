@@ -20,15 +20,15 @@ extern SERVICE
 
     switch(type)
     {
-    case PASSWD:
+    case TYPE_PASSWD:
         service = service_passwd_create();
         break;
 
-    case SHADOW:
+    case TYPE_SHADOW:
         service = service_shadow_create();
         break;
 
-    case GROUP:
+    case TYPE_GROUP:
         service = service_group_create();
         break;
 

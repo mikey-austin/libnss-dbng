@@ -22,7 +22,7 @@ main(int argc, char *argv[])
     int _result = PASS, ret;
     SERVICE *passwd;
 
-    passwd = service_create(PASSWD, 0, TEST_BASE);
+    passwd = service_create(TYPE_PASSWD, 0, TEST_BASE);
     if(passwd == NULL) {
         warnx("passwd service is NULL");
         return FAIL;
@@ -50,7 +50,7 @@ main(int argc, char *argv[])
     key.data.pri = "test-dbng-user";
 
     PASSWD_REC rec;
-    rec.base.type = PASSWD;
+    rec.base.type = TYPE_PASSWD;
     rec.uid = 1001;
     rec.gid = 1001;
     rec.name = "test-dbng-user";
@@ -168,7 +168,7 @@ main(int argc, char *argv[])
     key2.base.type = PRI;
     key2.data.pri = "another-test-dbng-user";
 
-    rec2.base.type = PASSWD;
+    rec2.base.type = TYPE_PASSWD;
     rec2.uid = 2001;
     rec2.gid = 2001;
     rec2.name = "another-test-dbng-user";
@@ -182,7 +182,7 @@ main(int argc, char *argv[])
     key3.base.type = PRI;
     key3.data.pri = "yet-another-test-dbng-user";
 
-    rec3.base.type = PASSWD;
+    rec3.base.type = TYPE_PASSWD;
     rec3.uid = 3001;
     rec3.gid = 3001;
     rec3.name = "yet-another-test-dbng-user";

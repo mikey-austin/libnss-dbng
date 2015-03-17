@@ -33,7 +33,7 @@ extern SERVICE
 
     service = xmalloc(sizeof(*service));
     memset(service, 0, sizeof(*service));
-    service->type = GROUP;
+    service->type = TYPE_GROUP;
     service->pri = GROUP_PRI;
     service->sec = GROUP_SEC;
 
@@ -105,7 +105,7 @@ parse(SERVICE *service, const char *raw, KEY *key, REC *rec)
     memset(grec, 0, sizeof(*grec));
     memset(&buf, 0, sizeof(buf));
     gkey->base.type = PRI;
-    grec->base.type = GROUP;
+    grec->base.type = TYPE_GROUP;
 
     ret = regcomp(&regex,
                   "([^:]+):"        /* group. */
@@ -361,7 +361,7 @@ unpack_rec(SERVICE *service, REC *rec, const DBT *dbrec)
     int i, len, remaining = dbrec->size;
 
     memset(grec, 0, sizeof(*grec));
-    grec->base.type = GROUP;
+    grec->base.type = TYPE_GROUP;
 
     memcpy(&grec->gid, buf, sizeof(grec->gid));
     buf += sizeof(grec->gid);
