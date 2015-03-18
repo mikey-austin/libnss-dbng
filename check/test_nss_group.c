@@ -18,6 +18,9 @@
 #define FAIL 1
 #define MAX_BUF 2048
 
+static char *mem1[] = { "member1", "member2", "member3", "member4", NULL };
+static char *mem2[] = { "member1", "member2", NULL };
+
 int
 main(int argc, char *argv[])
 {
@@ -60,7 +63,11 @@ main(int argc, char *argv[])
 
     if(!(gbuf.gr_gid == 1101
          && !strcmp(gbuf.gr_name, "test-dbng-group")
-         && !strcmp(gbuf.gr_passwd, "x")))
+         && !strcmp(gbuf.gr_passwd, "x")
+         && !strcmp(gbuf.gr_mem[0], "member1")
+         && !strcmp(gbuf.gr_mem[1], "member2")
+         && !strcmp(gbuf.gr_mem[2], "member3")
+         && !strcmp(gbuf.gr_mem[3], "member4")))
     {
         warnx("unexpected group details from getgrnam_r");
         result = FAIL;
@@ -79,7 +86,11 @@ main(int argc, char *argv[])
 
     if(!(gbuf.gr_gid == 1101
          && !strcmp(gbuf.gr_name, "test-dbng-group")
-         && !strcmp(gbuf.gr_passwd, "x")))
+         && !strcmp(gbuf.gr_passwd, "x")
+         && !strcmp(gbuf.gr_mem[0], "member1")
+         && !strcmp(gbuf.gr_mem[1], "member2")
+         && !strcmp(gbuf.gr_mem[2], "member3")
+         && !strcmp(gbuf.gr_mem[3], "member4")))
     {
         warnx("unexpected group details from getgrnam_r");
         result = FAIL;
@@ -120,7 +131,11 @@ main(int argc, char *argv[])
         case 1101:
             if(!(gbuf.gr_gid == 1101
                  && !strcmp(gbuf.gr_name, "test-dbng-group")
-                 && !strcmp(gbuf.gr_passwd, "x")))
+                 && !strcmp(gbuf.gr_passwd, "x")
+                 && !strcmp(gbuf.gr_mem[0], "member1")
+                 && !strcmp(gbuf.gr_mem[1], "member2")
+                 && !strcmp(gbuf.gr_mem[2], "member3")
+                 && !strcmp(gbuf.gr_mem[3], "member4")))
             {
                 warnx("unexpected group details from getgrent_r");
                 result = FAIL;
@@ -131,7 +146,9 @@ main(int argc, char *argv[])
         case 2101:
             if(!(gbuf.gr_gid == 2101
                  && !strcmp(gbuf.gr_name, "another-test-dbng-group")
-                 && !strcmp(gbuf.gr_passwd, "x")))
+                 && !strcmp(gbuf.gr_passwd, "x")
+                 && !strcmp(gbuf.gr_mem[0], "member1")
+                 && !strcmp(gbuf.gr_mem[1], "member2")))
             {
                 warnx("unexpected group details from getgrent_r");
                 result = FAIL;
@@ -214,7 +231,6 @@ setup_db(void)
     rec.passwd = "x";
     rec.gid = 1101;
     rec.count = 4;
-    char *mem1[] = { "member1", "member2", "member3", "member4", NULL };
     rec.members = mem1;
 
     GROUP_KEY key2;
@@ -227,7 +243,6 @@ setup_db(void)
     rec2.passwd = "x";
     rec2.gid = 2101;
     rec2.count = 2;
-    char *mem2[] = { "member1", "member2", NULL };
     rec2.members = mem2;
 
     group->start_txn(group);
