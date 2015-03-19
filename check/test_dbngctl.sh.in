@@ -1,7 +1,7 @@
 # Run tests through valgrind if it exists.
 
 VALGRIND="@VALGRIND@"
-BASE="/tmp/test_dbngctl_base"
+BASE="@TEST_BASE@"
 CMD="../dbngctl/dbngctl -b $BASE"
 
 if [ -x $VALGRIND ]; then
@@ -14,14 +14,6 @@ function run() {
         exit 1;
     fi
 }
-
-# Set up the db base.
-echo "** setting up $BASE..."
-if [ -d $BASE ]; then
-    rm -f $BASE/*
-else
-    mkdir $BASE
-fi
 
 # Add a few passwd entries.
 echo "** testing passwd service"
