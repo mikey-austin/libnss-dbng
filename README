@@ -1,0 +1,22 @@
+libnss_dbng - Next-generation Berkeley DB libnss backend
+========================================================
+
+This library replaces the older libnss_db library. Apart from being a fresh, legacy-free & maintained codebase, it aims to make the following improvements:
+
+* Use more modern versions of Berkeley DB.
+* Make use of transactions to safely modify databases.
+* Make use of secondary indexes for fast lookups (ie lookup by UID or name in the case of passwd).
+* Have good test coverage via automated unit tests.
+* Provide a management library (**libdbng**) and sample frontend (**dbngctl**) to allow applications to safely manage the databases, as well as the core nss functions themselves.
+
+## Components
+
+In addition to the libnss functions, the following components are provided to manage the service databases:
+
+* **libdbng** - Object-oriented library to manage service databases (and secondary indexes transparently).
+
+* **dbngctl** - Control program to allow administrators to manage service databases from the command line. Makes use of **libdbng**.
+
+## Status
+
+Currently the **passwd**, **group** and **shadow** services are implemented.

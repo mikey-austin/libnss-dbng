@@ -1,0 +1,64 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "DBNGCTL" "8" "March 2015" "" ""
+.
+.SH "NAME"
+\fBdbngctl\fR \- libnss_dbng database management
+.
+.SH "SYNOPSIS"
+\fBdbngctl\fR \fB\-s\fR service [\fB\-b\fR base] [\fB\-d\fR key] [\fB\-atly\fR]
+.
+.SH "DESCRIPTION"
+\fBdbngctl\fR allows an administrator to safely manipulate the Berkeley DB databases and indexes for a particular \fIname service\fR\. Using \fBdbngctl\fR, a particular service database may:
+.
+.IP "\(bu" 4
+be truncated
+.
+.IP "\(bu" 4
+have records added/updated
+.
+.IP "\(bu" 4
+delete individual records by primary key
+.
+.IP "\(bu" 4
+and dump all records
+.
+.IP "" 0
+.
+.P
+The options are as follows:
+.
+.TP
+\fB\-s\fR \fIservice\fR
+The service to be operated on\. May currently be \fBpasswd\fR, \fBshadow\fR or \fBgroup\fR\. This option is required\.
+.
+.TP
+\fB\-b\fR \fIbase\fR
+The base filesystem location of the service databases (ie the Berkeley DB environment home directory)\.
+.
+.TP
+\fB\-a\fR
+Parse entries from STDIN and add the corresponding records to the service database\. If the record\'s key already exists, the record is updated\. Entries are expected in the traditional database\'s format, take passwd for example:
+.
+.IP
+mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+.
+.TP
+\fB\-d\fR \fIprimary key\fR
+Delete an individual record identified by the supplied primary key\.
+.
+.TP
+\fB\-t\fR
+Truncate the service database\. In the absence of the \fB\-y\fR option, manual confirmation is required\.
+.
+.TP
+\fB\-y\fR
+Do not ask for confirmation when truncating the database with \fB\-t\fR\.
+.
+.TP
+\fB\-l\fR
+Dump the records in the database in the service\'s traditional format\. This is the default action if no other is specified\.
+.
+.SH "AUTHORS"
+\fBdbngctl\fR was written by Mikey Austin \fImikey@jackiemclean\.net\fR

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='content-type' value='text/html;charset=utf8'>
+  <meta name='generator' value='Ronn/v0.7.3 (http://github.com/rtomayko/ronn/tree/0.7.3)'>
+  <title>dbngctl(8) - libnss_dbng database management</title>
+  <style type='text/css' media='all'>
+  /* style: man */
+  body#manpage {margin:0}
+  .mp {max-width:100ex;padding:0 9ex 1ex 4ex}
+  .mp p,.mp pre,.mp ul,.mp ol,.mp dl {margin:0 0 20px 0}
+  .mp h2 {margin:10px 0 0 0}
+  .mp > p,.mp > pre,.mp > ul,.mp > ol,.mp > dl {margin-left:8ex}
+  .mp h3 {margin:0 0 0 4ex}
+  .mp dt {margin:0;clear:left}
+  .mp dt.flush {float:left;width:8ex}
+  .mp dd {margin:0 0 0 9ex}
+  .mp h1,.mp h2,.mp h3,.mp h4 {clear:left}
+  .mp pre {margin-bottom:20px}
+  .mp pre+h2,.mp pre+h3 {margin-top:22px}
+  .mp h2+pre,.mp h3+pre {margin-top:5px}
+  .mp img {display:block;margin:auto}
+  .mp h1.man-title {display:none}
+  .mp,.mp code,.mp pre,.mp tt,.mp kbd,.mp samp,.mp h3,.mp h4 {font-family:monospace;font-size:14px;line-height:1.42857142857143}
+  .mp h2 {font-size:16px;line-height:1.25}
+  .mp h1 {font-size:20px;line-height:2}
+  .mp {text-align:justify;background:#fff}
+  .mp,.mp code,.mp pre,.mp pre code,.mp tt,.mp kbd,.mp samp {color:#131211}
+  .mp h1,.mp h2,.mp h3,.mp h4 {color:#030201}
+  .mp u {text-decoration:underline}
+  .mp code,.mp strong,.mp b {font-weight:bold;color:#131211}
+  .mp em,.mp var {font-style:italic;color:#232221;text-decoration:none}
+  .mp a,.mp a:link,.mp a:hover,.mp a code,.mp a pre,.mp a tt,.mp a kbd,.mp a samp {color:#0000ff}
+  .mp b.man-ref {font-weight:normal;color:#434241}
+  .mp pre {padding:0 4ex}
+  .mp pre code {font-weight:normal;color:#434241}
+  .mp h2+pre,h3+pre {padding-left:0}
+  ol.man-decor,ol.man-decor li {margin:3px 0 10px 0;padding:0;float:left;width:33%;list-style-type:none;text-transform:uppercase;color:#999;letter-spacing:1px}
+  ol.man-decor {width:100%}
+  ol.man-decor li.tl {text-align:left}
+  ol.man-decor li.tc {text-align:center;letter-spacing:4px}
+  ol.man-decor li.tr {text-align:right;float:right}
+  </style>
+</head>
+<!--
+  The following styles are deprecated and will be removed at some point:
+  div#man, div#man ol.man, div#man ol.head, div#man ol.man.
+
+  The .man-page, .man-decor, .man-head, .man-foot, .man-title, and
+  .man-navigation should be used instead.
+-->
+<body id='manpage'>
+  <div class='mp' id='man'>
+
+  <div class='man-navigation' style='display:none'>
+    <a href="#NAME">NAME</a>
+    <a href="#SYNOPSIS">SYNOPSIS</a>
+    <a href="#DESCRIPTION">DESCRIPTION</a>
+    <a href="#AUTHORS">AUTHORS</a>
+  </div>
+
+  <ol class='man-decor man-head man head'>
+    <li class='tl'>dbngctl(8)</li>
+    <li class='tc'></li>
+    <li class='tr'>dbngctl(8)</li>
+  </ol>
+
+  <h2 id="NAME">NAME</h2>
+<p class="man-name">
+  <code>dbngctl</code> - <span class="man-whatis">libnss_dbng database management</span>
+</p>
+
+<h2 id="SYNOPSIS">SYNOPSIS</h2>
+
+<p><code>dbngctl</code> <strong>-s</strong> service [<strong>-b</strong> base] [<strong>-d</strong> key] [<strong>-atly</strong>]</p>
+
+<h2 id="DESCRIPTION">DESCRIPTION</h2>
+
+<p><code>dbngctl</code> allows an administrator to safely manipulate the Berkeley DB databases and indexes for a particular <em>name service</em>. Using <code>dbngctl</code>, a particular service database may:</p>
+
+<ul>
+<li>be truncated</li>
+<li>have records added/updated</li>
+<li>delete individual records by primary key</li>
+<li>and dump all records</li>
+</ul>
+
+
+<p>The options are as follows:</p>
+
+<dl>
+<dt><strong>-s</strong> <em>service</em></dt><dd><p>The service to be operated on. May currently be <strong>passwd</strong>, <strong>shadow</strong> or <strong>group</strong>. This option is required.</p></dd>
+<dt class="flush"><strong>-b</strong> <em>base</em></dt><dd><p>The base filesystem location of the service databases (ie the Berkeley DB environment home directory).</p></dd>
+<dt class="flush"><strong>-a</strong></dt><dd><p>Parse entries from STDIN and add the corresponding records to the service database. If the record's key already exists, the record is updated. Entries are expected in the traditional database's format, take passwd for example:</p>
+
+<p>  mail:x:8:12:mail:/var/spool/mail:/sbin/nologin</p></dd>
+<dt><strong>-d</strong> <em>primary key</em></dt><dd><p>Delete an individual record identified by the supplied primary key.</p></dd>
+<dt class="flush"><strong>-t</strong></dt><dd><p>Truncate the service database. In the absence of the <strong>-y</strong> option, manual confirmation is required.</p></dd>
+<dt class="flush"><strong>-y</strong></dt><dd><p>Do not ask for confirmation when truncating the database with <strong>-t</strong>.</p></dd>
+<dt class="flush"><strong>-l</strong></dt><dd><p>Dump the records in the database in the service's traditional format. This is the default action if no other is specified.</p></dd>
+</dl>
+
+
+<h2 id="AUTHORS">AUTHORS</h2>
+
+<p><code>dbngctl</code> was written by Mikey Austin <a href="&#109;&#97;&#105;&#x6c;&#x74;&#111;&#58;&#x6d;&#x69;&#x6b;&#x65;&#121;&#64;&#106;&#x61;&#x63;&#x6b;&#x69;&#x65;&#109;&#99;&#108;&#x65;&#x61;&#110;&#46;&#x6e;&#x65;&#116;" data-bare-link="true">&#x6d;&#105;&#107;&#x65;&#121;&#x40;&#106;&#97;&#99;&#x6b;&#105;&#x65;&#109;&#99;&#x6c;&#101;&#97;&#110;&#46;&#x6e;&#101;&#116;</a></p>
+
+
+  <ol class='man-decor man-foot man foot'>
+    <li class='tl'></li>
+    <li class='tc'>March 2015</li>
+    <li class='tr'>dbngctl(8)</li>
+  </ol>
+
+  </div>
+</body>
+</html>
