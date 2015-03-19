@@ -8,7 +8,7 @@
 #ifndef SERVICE_H
 #define SERVICE_H
 
-#include <lib/dbng/dbng.h>
+#include "dbng.h"
 
 #define SERVICE_REC_MAX 1024
 

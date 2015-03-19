@@ -11,7 +11,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include <lib/service-shadow.h>
+#include "../lib/service-shadow.h"
 
 static enum nss_status fill_shadow(struct spwd *, char *, size_t,
                                    SERVICE *, SHADOW_REC *, int *);

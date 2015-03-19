@@ -40,3 +40,4 @@ check/test_*
 !check/test_*.c
 !check/test_*.in
 dbngctl
+libnss-dbng-*/

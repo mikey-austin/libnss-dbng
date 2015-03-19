@@ -10,9 +10,8 @@
 #include <errno.h>
 #include <string.h>
 
-#include <nss-dbng.h>
-#include <dbng/service.h>
-#include <service-group.h>
+#include "../nss/nss-dbng.h"
+#include "../lib/service-group.h"
 
 #define PASS 0
 #define FAIL 1

@@ -8,8 +8,8 @@
 #ifndef SERVICE_PASSWD_H
 #define SERVICE_PASSWD_H
 
-#include <lib/dbng/service.h>
-#include <lib/dbng/utils.h>
+#include "dbng/service.h"
+#include "dbng/utils.h"
 
 #define PASSWD_PRI "passwd.db"
 #define PASSWD_SEC "passwd-uid.db"

@@ -8,8 +8,8 @@
 #ifndef SERVICE_SHADOW_H
 #define SERVICE_SHADOW_H
 
-#include <lib/dbng/service.h>
-#include <lib/dbng/utils.h>
+#include "dbng/service.h"
+#include "dbng/utils.h"
 
 #define SHADOW_PRI "shadow.db"
 

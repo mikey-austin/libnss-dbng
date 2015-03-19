@@ -8,9 +8,10 @@
 #ifndef SERVICE_GROUP_H
 #define SERVICE_GROUP_H
 
-#include <lib/dbng/service.h>
-#include <lib/dbng/utils.h>
 #include <grp.h>
+
+#include "dbng/service.h"
+#include "dbng/utils.h"
 
 #define GROUP_PRI "group.db"
 #define GROUP_SEC "group-gid.db"

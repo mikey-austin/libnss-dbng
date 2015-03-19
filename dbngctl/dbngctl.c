@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <dbng/service.h>
+#include "../lib/dbng/service.h"
 
 #define PROGNAME "dbngctl"
 

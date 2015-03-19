@@ -8,8 +8,7 @@
 #include <err.h>
 #include <string.h>
 
-#include <dbng/service.h>
-#include <service-passwd.h>
+#include "../lib/service-passwd.h"
 
 #define PASS 0
 #define FAIL 1
