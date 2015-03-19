@@ -23,7 +23,7 @@ fi
 
 AC_ARG_VAR([TEST_BASE], [test base for database files])
 if test -z ${TEST_BASE}; then
-    TEST_BASE="/tmp/dbng"
+    TEST_BASE="/tmp/"
 fi
 
 AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [build the library in debug mode])],

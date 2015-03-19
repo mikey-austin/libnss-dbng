@@ -17,6 +17,7 @@ function run() {
 
 # Add a few passwd entries.
 echo "** testing passwd service"
+run -s passwd -ty
 run -s passwd -a <<EOF
 mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
 mikey:x:1000:1000:Mikey Austin:/home/mikey:/bin/bash
@@ -47,6 +48,7 @@ fi
 
 # Add a few group entries.
 echo "** testing group service"
+run -s group -ty
 run -s group -a <<EOF
 lightdm:x:993:
 lock:x:54:mikey,dexter,gordon
@@ -77,6 +79,7 @@ fi
 
 # Add a few shadow entries.
 echo "** testing shadow service"
+run -s shadow -ty
 run -s shadow -a <<EOF
 test:$6$nLngwds2$kQ70NzYAGfo2QFubQwoUChcweCkaTVl8eL7Sj.zCn9A0Q8p3UNmty44NuQGR6GvzaiKz4N.VNMdfEpc7NoJ3/1:16511:0:99999:7:::
 apache:!!:16325::::::
