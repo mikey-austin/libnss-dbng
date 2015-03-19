@@ -14,8 +14,17 @@ This library replaces the older libnss_db library. Apart from being a fresh, leg
 In addition to the libnss functions, the following components are provided to manage the service databases:
 
 * **libdbng** - Object-oriented library to manage service databases (and secondary indexes transparently).
-
 * **dbngctl** - Control program to allow administrators to manage service databases from the command line. Makes use of **libdbng**.
+
+## Building
+
+The library requires Berkeley DB (4.x or 5.x).
+
+Via autotools, use something like:
+
+      $ autoreconf -i
+      $ ./configure DEFAULT_BASE="/var/dbng" TEST_BASE="/tmp" && make
+      $ make check && sudo make install
 
 ## Status
 
