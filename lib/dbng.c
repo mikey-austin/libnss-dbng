@@ -24,11 +24,13 @@ extern DBNG
     handle->sec    = NULL;
 
     /* Open & setup environment. */
-    db_flags = DB_CREATE
-        | DB_INIT_TXN
-        | DB_INIT_LOCK
-        | DB_INIT_LOG
-        | DB_INIT_MPOOL;
+    db_flags = DB_INIT_MPOOL;
+
+    if(!(flags & DBNG_RO)) {
+        db_flags |= DB_CREATE
+            | DB_INIT_TXN
+            | DB_INIT_LOCK;
+    }
 
     ret = db_env_create(&handle->env, 0);
     if(ret != 0) {

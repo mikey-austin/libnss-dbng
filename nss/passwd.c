@@ -53,8 +53,6 @@ _nss_dbng_setpwent(void)
         goto cleanup;
     }
 
-    Pwd_service->start_txn(Pwd_service);
-
 cleanup:
     NSS_DBNG_UNLOCK();
     return status;
@@ -69,7 +67,6 @@ _nss_dbng_endpwent(void)
     NSS_DBNG_LOCK();
 
     if(Pwd_service != NULL) {
-        Pwd_service->commit(Pwd_service);
         service_free(&Pwd_service);
     }
 

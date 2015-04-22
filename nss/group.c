@@ -50,8 +50,6 @@ _nss_dbng_setgrent(void)
         goto cleanup;
     }
 
-    Gr_service->start_txn(Gr_service);
-
 cleanup:
     NSS_DBNG_UNLOCK();
     return status;
@@ -63,7 +61,6 @@ _nss_dbng_endgrent(void)
     NSS_DBNG_LOCK();
 
     if(Gr_service != NULL) {
-        Gr_service->commit(Gr_service);
         service_free(&Gr_service);
     }
 
