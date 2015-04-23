@@ -41,9 +41,14 @@ _nss_dbng_setpwent(void)
 
     NSS_DBNG_LOCK();
     service_init(&Pwd_service, TYPE_PASSWD, DBNG_RO, DEFAULT_BASE);
+    if(Pwd_service.db.pri == NULL) {
+        status = NSS_STATUS_UNAVAIL;
+        goto cleanup;
+    }
     init = 1;
     NSS_DBNG_UNLOCK();
 
+cleanup:
     return status;
 }
 
@@ -117,6 +122,10 @@ _nss_dbng_getpwnam_r(const char* name, struct passwd *pwbuf,
     enum nss_status status;
 
     service_init(&passwd, TYPE_PASSWD, DBNG_RO, DEFAULT_BASE);
+    if(passwd.db.pri == NULL) {
+        *errnop = ENOENT;
+        return NSS_STATUS_UNAVAIL;
+    }
 
     char uname[strlen(name) + 1];
     strcpy(uname, name);
@@ -161,6 +170,11 @@ _nss_dbng_getpwuid_r(uid_t uid, struct passwd *pwbuf,
     enum nss_status status;
 
     service_init(&passwd, TYPE_PASSWD, DBNG_RO, DEFAULT_BASE);
+    if(passwd.db.pri == NULL) {
+        *errnop = ENOENT;
+        status = NSS_STATUS_UNAVAIL;
+        goto cleanup;
+    }
 
     /* Query on the secondary index. */
     key.base.type = SEC;

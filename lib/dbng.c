@@ -25,26 +25,27 @@ extern DBNG
     handle->sec    = NULL;
 
     /* Open & setup environment. */
-    db_flags = DB_INIT_MPOOL;
+    db_flags = 0;
 
     if(!(flags & DBNG_RO)) {
         db_flags |= DB_CREATE
+            | DB_INIT_MPOOL
             | DB_INIT_TXN
             | DB_INIT_LOCK;
-    }
 
-    ret = db_env_create(&handle->env, 0);
-    if(ret != 0) {
-        warnx("error creating db environment: %s",
-              db_strerror(ret));
-        goto err;
-    }
+        ret = db_env_create(&handle->env, 0);
+        if(ret != 0) {
+            warnx("error creating db environment: %s",
+                  db_strerror(ret));
+            goto err;
+        }
 
-    ret = handle->env->open(handle->env, base, db_flags, 0);
-    if(ret != 0) {
-        warnx("error opening db environment: %s",
-              db_strerror(ret));
-        goto err;
+        ret = handle->env->open(handle->env, base, db_flags, 0);
+        if(ret != 0) {
+            warnx("error opening db environment: %s",
+                  db_strerror(ret));
+            goto err;
+        }
     }
 
     /* Open & setup primary database. */
@@ -55,7 +56,7 @@ extern DBNG
         goto err;
     }
 
-    db_flags = (flags & DBNG_RO ? DB_RDONLY : DB_CREATE) | DB_AUTO_COMMIT;
+    db_flags = (flags & DBNG_RO ? DB_RDONLY : DB_CREATE | DB_AUTO_COMMIT);
     ret = handle->pri->open(handle->pri, NULL, pri, NULL, DB_BTREE,
                                 db_flags, DBNG_PERMS);
     if(ret != 0) {
