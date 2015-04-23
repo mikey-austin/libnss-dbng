@@ -20,8 +20,8 @@
 #  include <db.h>
 #endif
 
-#define DBNG_RO 0
-#define DBNG_Rw 1
+#define DBNG_RO 1
+#define DBNG_Rw 2
 #define DBNG_PERMS 0644
 
 typedef struct DBNG {
