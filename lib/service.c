@@ -13,23 +13,21 @@
 #include "service-shadow.h"
 #include "service-group.h"
 
-extern SERVICE
-*service_create(enum TYPE type, int flags, const char *base)
+extern void
+service_init(SERVICE *service, enum TYPE type, int flags, const char *base)
 {
-    SERVICE *service = NULL;
-
     switch(type)
     {
     case TYPE_PASSWD:
-        service = service_passwd_create();
+        service_passwd_init(service);
         break;
 
     case TYPE_SHADOW:
-        service = service_shadow_create();
+        service_shadow_init(service);
         break;
 
     case TYPE_GROUP:
-        service = service_group_create();
+        service_group_init(service);
         break;
 
     default:
@@ -38,32 +36,17 @@ extern SERVICE
     }
 
     /* Initialize the database for this service. */
-    service->db = dbng_create(base,
-                              service->pri,
-                              service->sec,
-                              service->key_creator,
-                              flags);
-    if(service->db == NULL)
-        goto err;
-
-    return service;
-
+    dbng_init(&service->db, base, service->pri, service->sec,
+              service->key_creator, flags);
+              
 err:
-    xfree((void **) &service);
-    return NULL;
+    return;
 }
 
 extern void
-service_free(SERVICE **service)
+service_cleanup(SERVICE *service)
 {
-    if(service == NULL || *service == NULL)
-        return;
-
-    if((*service)->cleanup != NULL)
-        (*service)->cleanup(*service);
-
-    dbng_free(&(*service)->db);
-    xfree((void **) service);
+    dbng_cleanup(&service->db);
 }
 
 extern int
@@ -72,7 +55,7 @@ service_get_rec(SERVICE *service, KEY *key, REC *rec)
     int ret;
     DBT dbkey, dbval;
     DB *db = (key->type == PRI
-              ? service->db->pri : service->db->sec);
+              ? service->db.pri : service->db.sec);
     int ksize = service->key_size(service, key);
     unsigned char kbuf[ksize];
 
@@ -83,7 +66,7 @@ service_get_rec(SERVICE *service, KEY *key, REC *rec)
     service->pack_key(service, key, &dbkey);
     memset(&dbval, 0, sizeof(dbval));
 
-    ret = db->get(db, service->db->txn, &dbkey, &dbval, 0);
+    ret = db->get(db, service->db.txn, &dbkey, &dbval, 0);
     if(ret == 0)
         service->unpack_rec(service, rec, &dbval);
 
@@ -95,7 +78,7 @@ service_set_rec(SERVICE *service, KEY *key, REC *rec)
 {
     int ret;
     DBT dbkey, dbrec;
-    DB *db = service->db->pri; /* Secondary database updated automatically. */
+    DB *db = service->db.pri; /* Secondary database updated automatically. */
     int ksize = service->key_size(service, key);
     int rsize = service->rec_size(service, rec);
     unsigned char kbuf[ksize];
@@ -113,7 +96,7 @@ service_set_rec(SERVICE *service, KEY *key, REC *rec)
     
     service->pack_key(service, key, &dbkey);
     service->pack_rec(service, rec, &dbrec);
-    ret = db->put(db, service->db->txn, &dbkey, &dbrec, 0);
+    ret = db->put(db, service->db.txn, &dbkey, &dbrec, 0);
 
     return ret;
 }
@@ -123,7 +106,7 @@ service_delete_rec(SERVICE *service, KEY *key)
 {
     int ret;
     DBT dbkey;
-    DB *db = service->db->pri; /* Secondary database updated automatically. */
+    DB *db = service->db.pri; /* Secondary database updated automatically. */
     int ksize = service->key_size(service, key);
     unsigned char kbuf[ksize];
 
@@ -132,7 +115,7 @@ service_delete_rec(SERVICE *service, KEY *key)
     dbkey.data = kbuf;
     dbkey.size = ksize;
     service->pack_key(service, key, &dbkey);
-    ret = db->del(db, service->db->txn, &dbkey, 0);
+    ret = db->del(db, service->db.txn, &dbkey, 0);
 
     return ret;
 }
@@ -142,19 +125,19 @@ service_next_rec(SERVICE *service, KEY *key, REC *rec)
 {
     int ret;
     DBT dbkey, dbval;
-    DB *db = service->db->pri;
+    DB *db = service->db.pri;
     DBC *cursor;
 
     /* If the cursor is not set, create a new one. */
-    if(service->db->cursor == NULL) {
-        ret = db->cursor(db, service->db->txn, &service->db->cursor, 0);
+    if(service->db.cursor == NULL) {
+        ret = db->cursor(db, service->db.txn, &service->db.cursor, 0);
         if(ret != 0) {
-            service->db->cursor = NULL;
+            service->db.cursor = NULL;
             return ret;
         }
     }
 
-    cursor = service->db->cursor;
+    cursor = service->db.cursor;
     memset(&dbkey, 0, sizeof(dbkey));
     memset(&dbval, 0, sizeof(dbval));
 
@@ -168,7 +151,7 @@ service_next_rec(SERVICE *service, KEY *key, REC *rec)
     case DB_NOTFOUND:
         /* We have reached the end of the iterator. */
         cursor->close(cursor);
-        service->db->cursor = NULL;
+        service->db.cursor = NULL;
         break;
     }
 
@@ -179,9 +162,9 @@ extern int
 service_truncate(SERVICE *service)
 {
     int ret, truncated;
-    DB *db = service->db->pri; /* Secondary database updated automatically. */
+    DB *db = service->db.pri; /* Secondary database updated automatically. */
 
-    ret = db->truncate(db, service->db->txn, &truncated, 0);
+    ret = db->truncate(db, service->db.txn, &truncated, 0);
 
     return ret;
 }
@@ -191,11 +174,11 @@ service_start_txn(SERVICE *service)
 {
     int ret;
 
-    if(service->db->txn != NULL)
+    if(service->db.txn != NULL)
         return -1;
 
-    ret = service->db->env->txn_begin(service->db->env, NULL,
-                                      &service->db->txn, 0);
+    ret = service->db.env->txn_begin(service->db.env, NULL,
+                                      &service->db.txn, 0);
     if(ret != 0)
         warnx("could not create transaction");
 
@@ -207,13 +190,13 @@ service_commit_txn(SERVICE *service)
 {
     int ret;
 
-    if(service->db->txn == NULL)
+    if(service->db.txn == NULL)
         return -1;
 
-    ret = service->db->txn->commit(service->db->txn, 0);
+    ret = service->db.txn->commit(service->db.txn, 0);
     if(ret != 0)
         warnx("could not commit transaction");
-    service->db->txn = NULL;
+    service->db.txn = NULL;
 
     return ret;
 }
@@ -223,13 +206,13 @@ service_rollback_txn(SERVICE *service)
 {
     int ret;
 
-    if(service->db->txn == NULL)
+    if(service->db.txn == NULL)
         return -1;
 
-    ret = service->db->txn->abort(service->db->txn);
+    ret = service->db.txn->abort(service->db.txn);
     if(ret != 0)
         warnx("could not rollback transaction");
-    service->db->txn = NULL;
+    service->db.txn = NULL;
 
     return ret;
 }

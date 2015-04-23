@@ -35,7 +35,7 @@ typedef struct SERVICE SERVICE;
 struct SERVICE {
     char *pri;
     char *sec;
-    DBNG *db;
+    DBNG db;
 
     /* Callback to update secondary database. */
     int (*key_creator)(DB *, const DBT *, const DBT *, DBT *);
@@ -66,12 +66,12 @@ struct SERVICE {
 /**
  *
  */
-extern SERVICE *service_create(enum TYPE type, int flags, const char *base);
+extern void service_init(SERVICE *service, enum TYPE type, int flags, const char *base);
 
 /**
  *
  */
-extern void service_free(SERVICE **service);
+extern void service_cleanup(SERVICE *service);
 
 /**
  *

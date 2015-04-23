@@ -79,21 +79,17 @@ int
 setup_db(void)
 {
     int result = PASS, ret;
-    SERVICE *shadow;
+    SERVICE shadow;
 
-    shadow = service_create(TYPE_SHADOW, 0, TEST_BASE);
-    if(shadow == NULL) {
-        warnx("shadow service is NULL");
-        return FAIL;
-    }
+    service_init(&shadow, TYPE_SHADOW, 0, TEST_BASE);
 
-    if(strcmp(shadow->pri, SHADOW_PRI)) {
+    if(strcmp(shadow.pri, SHADOW_PRI)) {
         result = FAIL;
         warnx("incorrectly initialized shadow service");
         goto err;
     }
 
-    if(shadow->truncate(shadow) != 0) {
+    if(shadow.truncate(&shadow) != 0) {
         result = FAIL;
         warnx("could not truncate shadow service");
         goto err;
@@ -133,17 +129,18 @@ setup_db(void)
     rec2.inact = 1234;
     rec2.expire = 2;
 
-    shadow->start_txn(shadow);
-    shadow->set(shadow, (KEY *) &key, (REC *) &rec);
-    shadow->set(shadow, (KEY *) &key2, (REC *) &rec2);
-    ret = shadow->commit(shadow);
+    shadow.start_txn(&shadow);
+    shadow.set(&shadow, (KEY *) &key, (REC *) &rec);
+    shadow.set(&shadow, (KEY *) &key2, (REC *) &rec2);
+    ret = shadow.commit(&shadow);
     if(ret != 0) {
         result = FAIL;
         warnx("could not commit txn");
         goto err;
     }
 
+    service_cleanup(&shadow);
+
 err:
-    service_free(&shadow);
     return result;
 }

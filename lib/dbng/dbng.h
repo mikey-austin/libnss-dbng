@@ -35,7 +35,8 @@ typedef struct DBNG {
 /**
  *
  */
-extern DBNG *dbng_create(const char *base,
+extern DBNG *dbng_create(DBNG *handle,
+                         const char *base,
                          const char *pri,
                          const char *sec,
                          int (*key_creator)(DB *, const DBT *, const DBT *, DBT *),
@@ -44,6 +45,6 @@ extern DBNG *dbng_create(const char *base,
 /**
  *
  */
-extern void dbng_free(DBNG **handle);
+extern void dbng_cleanup(DBNG *handle);
 
 #endif

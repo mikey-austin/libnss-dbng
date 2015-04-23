@@ -36,6 +36,6 @@ typedef struct GROUP_KEY {
 /**
  *
  */
-extern SERVICE *service_group_create(void);
+extern void service_group_init(SERVICE *service);
 
 #endif

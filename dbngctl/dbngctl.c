@@ -193,22 +193,20 @@ main(int argc, char *argv[])
         usage();
     }
 
-    SERVICE *service = service_create(stype, flags, base);
-    if(service == NULL) {
-        errx(1, "could not create service");
-    }
+    SERVICE service;
+    service_init(&service, stype, flags, base);
 
     switch(cmd) {
     case LIST:
-        list(service);
+        list(&service);
         break;
 
     case ADD:
-        add(service);
+        add(&service);
         break;
 
     case DELETE:
-        delete(service, key);
+        delete(&service, key);
         break;
 
     case TRUNCATE:
@@ -237,7 +235,7 @@ main(int argc, char *argv[])
 
     confirmed:
         if(c == 'y') {
-            if(service->truncate(service) == 0) {
+            if(service.truncate(&service) == 0) {
                 printf("database truncated...\n");
             }
         }
@@ -245,7 +243,6 @@ main(int argc, char *argv[])
     }
 
 cleanup:
-    service_free(&service);
-
+    service_cleanup(&service);
     return 0;
 }

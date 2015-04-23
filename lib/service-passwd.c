@@ -26,12 +26,9 @@ static int key_creator(DB *, const DBT *, const DBT *, DBT *);
 static size_t rec_size(SERVICE *, const REC *);
 static size_t key_size(SERVICE *, const KEY *);
 
-extern SERVICE
-*service_passwd_create(void)
+extern void
+service_passwd_init(SERVICE *service)
 {
-    SERVICE *service = NULL;
-
-    service = xmalloc(sizeof(*service));
     memset(service, 0, sizeof(*service));
     service->type = TYPE_PASSWD;
     service->pri = PASSWD_PRI;
@@ -61,8 +58,6 @@ extern SERVICE
     service->start_txn = service_start_txn;
     service->commit = service_commit_txn;
     service->rollback = service_rollback_txn;
-
-    return (SERVICE *) service;
 }
 
 static void

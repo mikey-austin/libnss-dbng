@@ -114,13 +114,6 @@ main(int argc, char *argv[])
         goto err;
     }
 
-    status = _nss_dbng_setgrent();
-    if(status != NSS_STATUS_TRYAGAIN) {
-        warnx("expected to be told to try again setgrent");
-        result = FAIL;
-        goto err;
-    }
-
     int i;
     for(i = 0;
         _nss_dbng_getgrent_r(&gbuf, buf, MAX_BUF, &errnop);
@@ -195,23 +188,19 @@ int
 setup_db(void)
 {
     int result = PASS, ret;
-    SERVICE *group;
+    SERVICE group;
 
-    group = service_create(TYPE_GROUP, 0, TEST_BASE);
-    if(group == NULL) {
-        warnx("group service is NULL");
-        return FAIL;
-    }
+    service_init(&group, TYPE_GROUP, 0, TEST_BASE);
 
-    if(strcmp(group->pri, GROUP_PRI)
-       || strcmp(group->sec, GROUP_SEC))
+    if(strcmp(group.pri, GROUP_PRI)
+       || strcmp(group.sec, GROUP_SEC))
     {
         result = FAIL;
         warnx("incorrectly initialized group service");
         goto err;
     }
 
-    if(group->truncate(group) != 0) {
+    if(group.truncate(&group) != 0) {
         result = FAIL;
         warnx("could not truncate group service");
         goto err;
@@ -244,17 +233,18 @@ setup_db(void)
     rec2.count = 2;
     rec2.members = mem2;
 
-    group->start_txn(group);
-    group->set(group, (KEY *) &key, (REC *) &rec);
-    group->set(group, (KEY *) &key2, (REC *) &rec2);
-    ret = group->commit(group);
+    group.start_txn(&group);
+    group.set(&group, (KEY *) &key, (REC *) &rec);
+    group.set(&group, (KEY *) &key2, (REC *) &rec2);
+    ret = group.commit(&group);
     if(ret != 0) {
         result = FAIL;
         warnx("could not commit txn");
         goto err;
     }
 
+    service_cleanup(&group);
+
 err:
-    service_free(&group);
     return result;
 }

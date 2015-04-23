@@ -19,23 +19,19 @@ int
 main(int argc, char *argv[])
 {
     int _result = PASS, ret;
-    SERVICE *passwd;
+    SERVICE passwd;
 
-    passwd = service_create(TYPE_PASSWD, 0, TEST_BASE);
-    if(passwd == NULL) {
-        warnx("passwd service is NULL");
-        return FAIL;
-    }
+    service_init(&passwd, TYPE_PASSWD, 0, TEST_BASE);
 
-    if(strcmp(passwd->pri, PASSWD_PRI)
-       || strcmp(passwd->sec, PASSWD_SEC))
+    if(strcmp(passwd.pri, PASSWD_PRI)
+       || strcmp(passwd.sec, PASSWD_SEC))
     {
         _result = FAIL;
         warnx("incorrectly initialized passwd service");
         goto err;
     }
 
-    if(passwd->truncate(passwd) != 0) {
+    if(passwd.truncate(&passwd) != 0) {
         _result = FAIL;
         warnx("could not truncate passwd service");
         goto err;
@@ -58,7 +54,7 @@ main(int argc, char *argv[])
     rec.shell = "/bin/bash";
     rec.homedir = "/home/test-dbng-user";
 
-    ret = passwd->set(passwd, (KEY *) &key, (REC *) &rec);
+    ret = passwd.set(&passwd, (KEY *) &key, (REC *) &rec);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not insert passwd record");
@@ -73,7 +69,7 @@ main(int argc, char *argv[])
 
     key2.base.type = PRI;
     key2.data.pri = "test-dbng-user";
-    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec2);
+    ret = passwd.get(&passwd, (KEY *) &key2, (REC *) &rec2);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not fetch passwd record");
@@ -91,7 +87,7 @@ main(int argc, char *argv[])
      */
     key2.data.pri = "non-existant-user";
     memset(&rec2, 0, sizeof(rec2));
-    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec2);
+    ret = passwd.get(&passwd, (KEY *) &key2, (REC *) &rec2);
     if(ret != DB_NOTFOUND) {
         _result = FAIL;
         warnx("fetch unexpected return code");
@@ -104,7 +100,7 @@ main(int argc, char *argv[])
     key2.base.type = SEC;
     key2.data.sec = 1001;
     memset(&rec2, 0, sizeof(rec2));
-    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec2);
+    ret = passwd.get(&passwd, (KEY *) &key2, (REC *) &rec2);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not fetch passwd record");
@@ -122,7 +118,7 @@ main(int argc, char *argv[])
      */
     key2.data.sec = 8888;
     memset(&rec2, 0, sizeof(rec2));
-    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec2);
+    ret = passwd.get(&passwd, (KEY *) &key2, (REC *) &rec2);
     if(ret != DB_NOTFOUND) {
         _result = FAIL;
         warnx("fetch by uid unexpected return code");
@@ -134,7 +130,7 @@ main(int argc, char *argv[])
      */
     key2.base.type = PRI;
     key2.data.pri = "test-dbng-user";
-    ret = passwd->delete(passwd, (KEY *) &key2);
+    ret = passwd.delete(&passwd, (KEY *) &key2);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not delete passwd record");
@@ -145,7 +141,7 @@ main(int argc, char *argv[])
      * Fetch the recently deleted record by primary & secondary indexes.
      */
     memset(&rec2, 0, sizeof(rec2));
-    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec2);
+    ret = passwd.get(&passwd, (KEY *) &key2, (REC *) &rec2);
     if(ret != DB_NOTFOUND) {
         _result = FAIL;
         warnx("fetch unexpected return code");
@@ -154,7 +150,7 @@ main(int argc, char *argv[])
 
     key2.base.type = SEC;
     key2.data.sec = 1001;
-    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec2);
+    ret = passwd.get(&passwd, (KEY *) &key2, (REC *) &rec2);
     if(ret != DB_NOTFOUND) {
         _result = FAIL;
         warnx("fetch by uid unexpected return code");
@@ -190,35 +186,35 @@ main(int argc, char *argv[])
     rec3.shell = "/bin/bash";
     rec3.homedir = "/home/yet-another-test-dbng-user";
 
-    ret = passwd->start_txn(passwd);
+    ret = passwd.start_txn(&passwd);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not start txn");
         goto err;
     }
 
-    ret = passwd->set(passwd, (KEY *) &key, (REC *) &rec);
+    ret = passwd.set(&passwd, (KEY *) &key, (REC *) &rec);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not insert passwd record");
         goto err;
     }
 
-    ret = passwd->set(passwd, (KEY *) &key2, (REC *) &rec2);
+    ret = passwd.set(&passwd, (KEY *) &key2, (REC *) &rec2);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not insert passwd record");
         goto err;
     }
 
-    ret = passwd->set(passwd, (KEY *) &key3, (REC *) &rec3);
+    ret = passwd.set(&passwd, (KEY *) &key3, (REC *) &rec3);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not insert passwd record");
         goto err;
     }
 
-    ret = passwd->commit(passwd);
+    ret = passwd.commit(&passwd);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not commit txn");
@@ -228,21 +224,21 @@ main(int argc, char *argv[])
     /*
      * Test the rollback by truncating the database.
      */
-    ret = passwd->start_txn(passwd);
+    ret = passwd.start_txn(&passwd);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not start txn");
         goto err;
     }
 
-    ret = passwd->truncate(passwd);
+    ret = passwd.truncate(&passwd);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not truncate passwd service");
         goto err;
     }
 
-    ret = passwd->rollback(passwd);
+    ret = passwd.rollback(&passwd);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not rollback txn");
@@ -255,7 +251,7 @@ main(int argc, char *argv[])
      */
     PASSWD_KEY key4;
     PASSWD_REC rec4;
-    ret = passwd->get(passwd, (KEY *) &key2, (REC *) &rec4);
+    ret = passwd.get(&passwd, (KEY *) &key2, (REC *) &rec4);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not fetch passwd record");
@@ -268,7 +264,7 @@ main(int argc, char *argv[])
     PASSWD_REC *rp;
     int i;
     for(i = 0;
-        (ret = passwd->next(passwd, (KEY *) &key4, (REC *) &rec4)) != DB_NOTFOUND;
+        (ret = passwd.next(&passwd, (KEY *) &key4, (REC *) &rec4)) != DB_NOTFOUND;
         i++)
     {
         if(ret != 0 && ret != DB_NOTFOUND) {
@@ -309,15 +305,15 @@ main(int argc, char *argv[])
         goto err;
     }
 
-    if(passwd->db->cursor != NULL) {
+    if(passwd.db.cursor != NULL) {
         _result = FAIL;
         warnx("cursor not cleaned up correctly");
         goto err;
     }
 
-err:
-    service_free(&passwd);
+    service_cleanup(&passwd);
 
+err:
     return _result;
 }
 

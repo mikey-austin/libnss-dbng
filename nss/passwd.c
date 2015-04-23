@@ -25,7 +25,8 @@
     } while (0)
 
 static pthread_mutex_t pmutex = PTHREAD_MUTEX_INITIALIZER;
-static SERVICE *Pwd_service = NULL;
+static SERVICE Pwd_service;
+static volatile int init;
 
 static enum nss_status fill_passwd(struct passwd *, char *, size_t,
                                    SERVICE *, PASSWD_REC *, int *);
@@ -39,22 +40,10 @@ _nss_dbng_setpwent(void)
     enum nss_status status = NSS_STATUS_SUCCESS;
 
     NSS_DBNG_LOCK();
-
-    if(Pwd_service != NULL) {
-        status = NSS_STATUS_TRYAGAIN;
-        goto cleanup;
-    }
-
-    if((Pwd_service = service_create(TYPE_PASSWD, DBNG_RO, DEFAULT_BASE))
-       == NULL)
-    {
-        NSS_DEBUG("could not create passwd service object");
-        status = NSS_STATUS_UNAVAIL;
-        goto cleanup;
-    }
-
-cleanup:
+    service_init(&Pwd_service, TYPE_PASSWD, DBNG_RO, DEFAULT_BASE);
+    init = 1;
     NSS_DBNG_UNLOCK();
+
     return status;
 }
 
@@ -65,11 +54,10 @@ enum nss_status
 _nss_dbng_endpwent(void)
 {
     NSS_DBNG_LOCK();
-
-    if(Pwd_service != NULL) {
-        service_free(&Pwd_service);
+    if(init) {
+        service_cleanup(&Pwd_service);
+        init = 0;
     }
-
     NSS_DBNG_UNLOCK();
 
     return NSS_STATUS_SUCCESS;
@@ -89,16 +77,13 @@ _nss_dbng_getpwent_r(struct passwd *pwbuf, char *buf,
 
     NSS_DBNG_LOCK();
 
-    if(Pwd_service == NULL) {
-        *errnop = ENOENT;
-        status = NSS_STATUS_UNAVAIL;
+    if(!init)
         goto cleanup;
-    }
 
-    res = Pwd_service->next(Pwd_service, (KEY *) &key, (REC *) &rec);
+    res = Pwd_service.next(&Pwd_service, (KEY *) &key, (REC *) &rec);
     switch(res) {
     case 0:
-        status = fill_passwd(pwbuf, buf, buflen, Pwd_service, &rec, errnop);
+        status = fill_passwd(pwbuf, buf, buflen, &Pwd_service, &rec, errnop);
         break;
 
     case DB_NOTFOUND:
@@ -125,29 +110,24 @@ enum nss_status
 _nss_dbng_getpwnam_r(const char* name, struct passwd *pwbuf,
                      char *buf, size_t buflen, int *errnop)
 {
-    SERVICE *passwd;
+    SERVICE passwd;
     PASSWD_KEY key;
     PASSWD_REC rec;
     int res;
     enum nss_status status;
 
-    if((passwd = service_create(TYPE_PASSWD, DBNG_RO, DEFAULT_BASE))
-       == NULL)
-    {
-        NSS_DEBUG("could not create passwd service object");
-        return NSS_STATUS_UNAVAIL;
-    }
+    service_init(&passwd, TYPE_PASSWD, DBNG_RO, DEFAULT_BASE);
 
     char uname[strlen(name) + 1];
     strcpy(uname, name);
     key.data.pri = uname;
     key.base.type = PRI;
 
-    res = passwd->get(passwd, (KEY *) &key, (REC *) &rec);
+    res = passwd.get(&passwd, (KEY *) &key, (REC *) &rec);
     switch(res) {
     case 0:
         NSS_DEBUG("found user by name %s", name);
-        status = fill_passwd(pwbuf, buf, buflen, passwd, &rec, errnop);
+        status = fill_passwd(pwbuf, buf, buflen, &passwd, &rec, errnop);
         break;
 
     case DB_NOTFOUND:
@@ -163,7 +143,7 @@ _nss_dbng_getpwnam_r(const char* name, struct passwd *pwbuf,
     }
 
 cleanup:
-    service_free(&passwd);
+    service_cleanup(&passwd);
     return status;
 }
 
@@ -174,26 +154,22 @@ enum nss_status
 _nss_dbng_getpwuid_r(uid_t uid, struct passwd *pwbuf,
                      char *buf, size_t buflen, int *errnop)
 {
-    SERVICE *passwd;
+    SERVICE passwd;
     PASSWD_KEY key;
     PASSWD_REC rec;
     int res;
     enum nss_status status;
 
-    if((passwd = service_create(TYPE_PASSWD, DBNG_RO, DEFAULT_BASE)) == NULL) {
-        NSS_DEBUG("could not create passwd service object");
-        *errnop = ENOENT;
-        return NSS_STATUS_UNAVAIL;
-    }
+    service_init(&passwd, TYPE_PASSWD, DBNG_RO, DEFAULT_BASE);
 
     /* Query on the secondary index. */
     key.base.type = SEC;
     key.data.sec = uid;
-    res = passwd->get(passwd, (KEY *) &key, (REC *) &rec);
+    res = passwd.get(&passwd, (KEY *) &key, (REC *) &rec);
     switch(res) {
     case 0:
         NSS_DEBUG("found user by uid %d", uid);
-        status = fill_passwd(pwbuf, buf, buflen, passwd, &rec, errnop);
+        status = fill_passwd(pwbuf, buf, buflen, &passwd, &rec, errnop);
         break;
 
     case DB_NOTFOUND:
@@ -209,7 +185,7 @@ _nss_dbng_getpwuid_r(uid_t uid, struct passwd *pwbuf,
     }
 
 cleanup:
-    service_free(&passwd);
+    service_cleanup(&passwd);
     return status;
 }
 

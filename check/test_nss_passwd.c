@@ -110,13 +110,6 @@ main(int argc, char *argv[])
         goto err;
     }
 
-    status = _nss_dbng_setpwent();
-    if(status != NSS_STATUS_TRYAGAIN) {
-        warnx("expected to be told to try again setpwent");
-        result = FAIL;
-        goto err;
-    }
-
     int i;
     for(i = 0;
         _nss_dbng_getpwent_r(&pwbuf, buf, MAX_BUF, &errnop);
@@ -209,23 +202,19 @@ int
 setup_db(void)
 {
     int result = PASS, ret;
-    SERVICE *passwd;
+    SERVICE passwd;
 
-    passwd = service_create(TYPE_PASSWD, 0, TEST_BASE);
-    if(passwd == NULL) {
-        warnx("passwd service is NULL");
-        return FAIL;
-    }
+    service_init(&passwd, TYPE_PASSWD, 0, TEST_BASE);
 
-    if(strcmp(passwd->pri, PASSWD_PRI)
-       || strcmp(passwd->sec, PASSWD_SEC))
+    if(strcmp(passwd.pri, PASSWD_PRI)
+       || strcmp(passwd.sec, PASSWD_SEC))
     {
         result = FAIL;
         warnx("incorrectly initialized passwd service");
         goto err;
     }
 
-    if(passwd->truncate(passwd) != 0) {
+    if(passwd.truncate(&passwd) != 0) {
         result = FAIL;
         warnx("could not truncate passwd service");
         goto err;
@@ -276,19 +265,19 @@ setup_db(void)
     rec3.shell = "/bin/bash";
     rec3.homedir = "/home/yet-another-test-dbng-user";
 
-    passwd->start_txn(passwd);
-    passwd->set(passwd, (KEY *) &key, (REC *) &rec);
-    passwd->set(passwd, (KEY *) &key2, (REC *) &rec2);
-    passwd->set(passwd, (KEY *) &key3, (REC *) &rec3);
-    ret = passwd->commit(passwd);
+    passwd.start_txn(&passwd);
+    passwd.set(&passwd, (KEY *) &key, (REC *) &rec);
+    passwd.set(&passwd, (KEY *) &key2, (REC *) &rec2);
+    passwd.set(&passwd, (KEY *) &key3, (REC *) &rec3);
+    ret = passwd.commit(&passwd);
     if(ret != 0) {
         result = FAIL;
         warnx("could not commit txn");
         goto err;
     }
 
-err:
-    service_free(&passwd);
+    service_cleanup(&passwd);
 
+err:
     return result;
 }

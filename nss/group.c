@@ -25,7 +25,8 @@
     } while (0)
 
 static pthread_mutex_t gmutex = PTHREAD_MUTEX_INITIALIZER;
-static SERVICE *Gr_service = NULL;
+static SERVICE Gr_service;
+static volatile int init;
 
 static enum nss_status fill_group(struct group *, char *, size_t,
                                   SERVICE *, GROUP_REC *, int *);
@@ -36,22 +37,10 @@ _nss_dbng_setgrent(void)
     enum nss_status status = NSS_STATUS_SUCCESS;
 
     NSS_DBNG_LOCK();
-
-    if(Gr_service != NULL) {
-        status = NSS_STATUS_TRYAGAIN;
-        goto cleanup;
-    }
-
-    if((Gr_service = service_create(TYPE_GROUP, DBNG_RO, DEFAULT_BASE))
-       == NULL)
-    {
-        NSS_DEBUG("could not create group service object");
-        status = NSS_STATUS_UNAVAIL;
-        goto cleanup;
-    }
-
-cleanup:
+    service_init(&Gr_service, TYPE_GROUP, DBNG_RO, DEFAULT_BASE);
+    init = 1;
     NSS_DBNG_UNLOCK();
+
     return status;
 }
 
@@ -59,11 +48,10 @@ enum nss_status
 _nss_dbng_endgrent(void)
 {
     NSS_DBNG_LOCK();
-
-    if(Gr_service != NULL) {
-        service_free(&Gr_service);
+    if(init == 1) {
+        service_cleanup(&Gr_service);
+        init = 0;
     }
-
     NSS_DBNG_UNLOCK();
 
     return NSS_STATUS_SUCCESS;
@@ -80,16 +68,13 @@ _nss_dbng_getgrent_r(struct group *gbuf, char *buf, size_t buflen,
 
     NSS_DBNG_LOCK();
 
-    if(Gr_service == NULL) {
-        *errnop = ENOENT;
-        status = NSS_STATUS_UNAVAIL;
+    if(init != 1)
         goto cleanup;
-    }
 
-    res = Gr_service->next(Gr_service, (KEY *) &key, (REC *) &rec);
+    res = Gr_service.next(&Gr_service, (KEY *) &key, (REC *) &rec);
     switch(res) {
     case 0:
-        status = fill_group(gbuf, buf, buflen, Gr_service, &rec, errnop);
+        status = fill_group(gbuf, buf, buflen, &Gr_service, &rec, errnop);
         break;
 
     case DB_NOTFOUND:
@@ -113,27 +98,24 @@ enum nss_status
 _nss_dbng_getgrnam_r(const char* name, struct group *gbuf,
                        char *buf, size_t buflen, int *errnop)
 {
-    SERVICE *group;
+    SERVICE group;
     GROUP_KEY key;
     GROUP_REC rec;
     int res;
     enum nss_status status;
 
-    if((group = service_create(TYPE_GROUP, DBNG_RO, DEFAULT_BASE)) == NULL) {
-        NSS_DEBUG("could not create group service object");
-        return NSS_STATUS_UNAVAIL;
-    }
+    service_init(&group, TYPE_GROUP, DBNG_RO, DEFAULT_BASE);
 
     char uname[strlen(name) + 1];
     strcpy(uname, name);
     key.data.pri = uname;
     key.base.type = PRI;
 
-    res = group->get(group, (KEY *) &key, (REC *) &rec);
+    res = group.get(&group, (KEY *) &key, (REC *) &rec);
     switch(res) {
     case 0:
         NSS_DEBUG("found group by name %s", name);
-        status = fill_group(gbuf, buf, buflen, group, &rec, errnop);
+        status = fill_group(gbuf, buf, buflen, &group, &rec, errnop);
         break;
 
     case DB_NOTFOUND:
@@ -149,7 +131,7 @@ _nss_dbng_getgrnam_r(const char* name, struct group *gbuf,
     }
 
 cleanup:
-    service_free(&group);
+    service_cleanup(&group);
     return status;
 }
 
@@ -158,26 +140,22 @@ enum nss_status
 _nss_dbng_getgrgid_r(gid_t gid, struct group *gbuf,
                        char *buf, size_t buflen, int *errnop)
 {
-    SERVICE *group;
+    SERVICE group;
     GROUP_KEY key;
     GROUP_REC rec;
     int res;
     enum nss_status status;
 
-    if((group = service_create(TYPE_GROUP, DBNG_RO, DEFAULT_BASE)) == NULL) {
-        NSS_DEBUG("could not create group service object");
-        *errnop = ENOENT;
-        return NSS_STATUS_UNAVAIL;
-    }
+    service_init(&group, TYPE_GROUP, DBNG_RO, DEFAULT_BASE);
 
     /* Query on the secondary index. */
     key.base.type = SEC;
     key.data.sec = gid;
-    res = group->get(group, (KEY *) &key, (REC *) &rec);
+    res = group.get(&group, (KEY *) &key, (REC *) &rec);
     switch(res) {
     case 0:
         NSS_DEBUG("found group by gid %d", gid);
-        status = fill_group(gbuf, buf, buflen, group, &rec, errnop);
+        status = fill_group(gbuf, buf, buflen, &group, &rec, errnop);
         break;
 
     case DB_NOTFOUND:
@@ -193,7 +171,7 @@ _nss_dbng_getgrgid_r(gid_t gid, struct group *gbuf,
     }
 
 cleanup:
-    service_free(&group);
+    service_cleanup(&group);
     return status;
 }
 

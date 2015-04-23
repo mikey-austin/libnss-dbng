@@ -20,27 +20,24 @@ enum nss_status
 _nss_dbng_getspnam_r(const char* name, struct spwd *spbuf,
                      char *buf, size_t buflen, int *errnop)
 {
-    SERVICE *shadow;
+    SERVICE shadow;
     SHADOW_KEY key;
     SHADOW_REC rec;
     int res;
     enum nss_status status;
 
-    if((shadow = service_create(TYPE_SHADOW, DBNG_RO, DEFAULT_BASE)) == NULL) {
-        NSS_DEBUG("could not create shadow service object");
-        return NSS_STATUS_UNAVAIL;
-    }
+    service_init(&shadow, TYPE_SHADOW, DBNG_RO, DEFAULT_BASE);
 
     char uname[strlen(name) + 1];
     strcpy(uname, name);
     key.data.pri = uname;
     key.base.type = PRI;
 
-    res = shadow->get(shadow, (KEY *) &key, (REC *) &rec);
+    res = shadow.get(&shadow, (KEY *) &key, (REC *) &rec);
     switch(res) {
     case 0:
         NSS_DEBUG("found shadow entry by name %s", name);
-        status = fill_shadow(spbuf, buf, buflen, shadow, &rec, errnop);
+        status = fill_shadow(spbuf, buf, buflen, &shadow, &rec, errnop);
         break;
 
     case DB_NOTFOUND:
@@ -56,7 +53,7 @@ _nss_dbng_getspnam_r(const char* name, struct spwd *spbuf,
     }
 
 cleanup:
-    service_free(&shadow);
+    service_cleanup(&shadow);
     return status;
 }
 

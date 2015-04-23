@@ -5,18 +5,19 @@
  * @date 2015
  */
 
+#include <string.h>
+
 #include "dbng/dbng.h"
 #include "dbng/utils.h"
 
 extern DBNG
-*dbng_create(const char *base, const char *pri, const char *sec,
+*dbng_init(DBNG *handle, const char *base, const char *pri, const char *sec,
              int (*key_creator)(DB *, const DBT *, const DBT *,DBT *),
              int flags)
 {
-    DBNG *handle = NULL;
     int db_flags, ret;
 
-    handle = xmalloc(sizeof(*handle));
+    memset(handle, 0, sizeof(*handle));
     handle->txn    = NULL;
     handle->cursor = NULL;
     handle->env    = NULL;
@@ -98,20 +99,18 @@ err:
         handle->pri->close(handle->pri, 0);
     if(handle->env != NULL)
         handle->env->close(handle->env, 0);
-    xfree((void **) &handle);
     return NULL;
 }
 
 extern void
-dbng_free(DBNG **handle)
+dbng_cleanup(DBNG *handle)
 {
-    if(*handle != NULL) {
-        if((*handle)->sec != NULL)
-            (*handle)->sec->close((*handle)->sec, 0);
-        if((*handle)->pri != NULL)
-            (*handle)->pri->close((*handle)->pri, 0);
-        if((*handle)->env != NULL)
-            (*handle)->env->close((*handle)->env, 0);
-        xfree((void **) handle);
+    if(handle != NULL) {
+        if(handle->sec != NULL)
+            handle->sec->close(handle->sec, 0);
+        if(handle->pri != NULL)
+            handle->pri->close(handle->pri, 0);
+        if(handle->env != NULL)
+            handle->env->close(handle->env, 0);
     }
 }

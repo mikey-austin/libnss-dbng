@@ -20,21 +20,17 @@ int
 main(int argc, char *argv[])
 {
     int _result = PASS, ret;
-    SERVICE *shadow;
+    SERVICE shadow;
 
-    shadow = service_create(TYPE_SHADOW, 0, TEST_BASE);
-    if(shadow == NULL) {
-        warnx("shadow service is NULL");
-        return FAIL;
-    }
+    service_init(&shadow, TYPE_SHADOW, 0, TEST_BASE);
 
-    if(strcmp(shadow->pri, SHADOW_PRI)) {
+    if(strcmp(shadow.pri, SHADOW_PRI)) {
         _result = FAIL;
         warnx("incorrectly initialized shadow service");
         goto err;
     }
 
-    if(shadow->truncate(shadow) != 0) {
+    if(shadow.truncate(&shadow) != 0) {
         _result = FAIL;
         warnx("could not truncate shadow service");
         goto err;
@@ -58,7 +54,7 @@ main(int argc, char *argv[])
     rec.inact = -1;
     rec.expire = 1;
 
-    ret = shadow->set(shadow, (KEY *) &key, (REC *) &rec);
+    ret = shadow.set(&shadow, (KEY *) &key, (REC *) &rec);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not insert shadow record");
@@ -73,7 +69,7 @@ main(int argc, char *argv[])
 
     key2.base.type = PRI;
     key2.data.pri = "test-dbng-user";
-    ret = shadow->get(shadow, (KEY *) &key2, (REC *) &rec2);
+    ret = shadow.get(&shadow, (KEY *) &key2, (REC *) &rec2);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not fetch shadow record");
@@ -91,7 +87,7 @@ main(int argc, char *argv[])
      */
     key2.data.pri = "non-existant-user";
     memset(&rec2, 0, sizeof(rec2));
-    ret = shadow->get(shadow, (KEY *) &key2, (REC *) &rec2);
+    ret = shadow.get(&shadow, (KEY *) &key2, (REC *) &rec2);
     if(ret != DB_NOTFOUND) {
         _result = FAIL;
         warnx("fetch unexpected return code");
@@ -103,7 +99,7 @@ main(int argc, char *argv[])
      */
     key2.base.type = PRI;
     key2.data.pri = "test-dbng-user";
-    ret = shadow->delete(shadow, (KEY *) &key2);
+    ret = shadow.delete(&shadow, (KEY *) &key2);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not delete shadow record");
@@ -114,7 +110,7 @@ main(int argc, char *argv[])
      * Fetch the recently deleted record by primary index.
      */
     memset(&rec2, 0, sizeof(rec2));
-    ret = shadow->get(shadow, (KEY *) &key2, (REC *) &rec2);
+    ret = shadow.get(&shadow, (KEY *) &key2, (REC *) &rec2);
     if(ret != DB_NOTFOUND) {
         _result = FAIL;
         warnx("fetch unexpected return code");
@@ -137,28 +133,28 @@ main(int argc, char *argv[])
     rec2.inact = 1234;
     rec2.expire = 2;
 
-    ret = shadow->start_txn(shadow);
+    ret = shadow.start_txn(&shadow);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not start txn");
         goto err;
     }
 
-    ret = shadow->set(shadow, (KEY *) &key, (REC *) &rec);
+    ret = shadow.set(&shadow, (KEY *) &key, (REC *) &rec);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not insert shadow record");
         goto err;
     }
 
-    ret = shadow->set(shadow, (KEY *) &key2, (REC *) &rec2);
+    ret = shadow.set(&shadow, (KEY *) &key2, (REC *) &rec2);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not insert shadow record");
         goto err;
     }
 
-    ret = shadow->commit(shadow);
+    ret = shadow.commit(&shadow);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not commit txn");
@@ -168,21 +164,21 @@ main(int argc, char *argv[])
     /*
      * Test the rollback by truncating the database.
      */
-    ret = shadow->start_txn(shadow);
+    ret = shadow.start_txn(&shadow);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not start txn");
         goto err;
     }
 
-    ret = shadow->truncate(shadow);
+    ret = shadow.truncate(&shadow);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not truncate shadow service");
         goto err;
     }
 
-    ret = shadow->rollback(shadow);
+    ret = shadow.rollback(&shadow);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not rollback txn");
@@ -195,7 +191,7 @@ main(int argc, char *argv[])
      */
     SHADOW_KEY key4;
     SHADOW_REC rec4;
-    ret = shadow->get(shadow, (KEY *) &key2, (REC *) &rec4);
+    ret = shadow.get(&shadow, (KEY *) &key2, (REC *) &rec4);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not fetch shadow record");
@@ -208,7 +204,7 @@ main(int argc, char *argv[])
     SHADOW_REC *rp;
     int i;
     for(i = 0;
-        (ret = shadow->next(shadow, (KEY *) &key4, (REC *) &rec4)) != DB_NOTFOUND;
+        (ret = shadow.next(&shadow, (KEY *) &key4, (REC *) &rec4)) != DB_NOTFOUND;
         i++)
     {
         if(ret != 0 && ret != DB_NOTFOUND) {
@@ -245,15 +241,15 @@ main(int argc, char *argv[])
         goto err;
     }
 
-    if(shadow->db->cursor != NULL) {
+    if(shadow.db.cursor != NULL) {
         _result = FAIL;
         warnx("cursor not cleaned up correctly");
         goto err;
     }
 
-err:
-    service_free(&shadow);
+    service_cleanup(&shadow);
 
+err:
     return _result;
 }
 

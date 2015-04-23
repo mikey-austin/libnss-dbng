@@ -28,12 +28,9 @@ static void unpack_rec(SERVICE *, REC *, const DBT *);
 static size_t rec_size(SERVICE *, const REC *);
 static size_t key_size(SERVICE *, const KEY *);
 
-extern SERVICE
-*service_shadow_create(void)
+extern void
+service_shadow_init(SERVICE *service)
 {
-    SERVICE *service = NULL;
-
-    service = xmalloc(sizeof(*service));
     memset(service, 0, sizeof(*service));
     service->type = TYPE_SHADOW;
     service->pri = SHADOW_PRI;
@@ -63,8 +60,6 @@ extern SERVICE
     service->start_txn = service_start_txn;
     service->commit = service_commit_txn;
     service->rollback = service_rollback_txn;
-
-    return (SERVICE *) service;
 }
 
 static void

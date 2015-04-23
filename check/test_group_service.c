@@ -20,23 +20,19 @@ int
 main(int argc, char *argv[])
 {
     int _result = PASS, ret;
-    SERVICE *group;
+    SERVICE group;
 
-    group = service_create(TYPE_GROUP, 0, TEST_BASE);
-    if(group == NULL) {
-        warnx("group service is NULL");
-        return FAIL;
-    }
+    service_init(&group, TYPE_GROUP, 0, TEST_BASE);
 
-    if(strcmp(group->pri, GROUP_PRI)
-       || strcmp(group->sec, GROUP_SEC))
+    if(strcmp(group.pri, GROUP_PRI)
+       || strcmp(group.sec, GROUP_SEC))
     {
         _result = FAIL;
         warnx("incorrectly initialized group service");
         goto err;
     }
 
-    if(group->truncate(group) != 0) {
+    if(group.truncate(&group) != 0) {
         _result = FAIL;
         warnx("could not truncate group service");
         goto err;
@@ -58,7 +54,7 @@ main(int argc, char *argv[])
     rec.count = 4;
     rec.members = group1_members;
 
-    ret = group->set(group, (KEY *) &key, (REC *) &rec);
+    ret = group.set(&group, (KEY *) &key, (REC *) &rec);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not insert group record");
@@ -73,7 +69,7 @@ main(int argc, char *argv[])
 
     key2.base.type = PRI;
     key2.data.pri = "test-dbng-group";
-    ret = group->get(group, (KEY *) &key2, (REC *) &rec2);
+    ret = group.get(&group, (KEY *) &key2, (REC *) &rec2);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not fetch group record");
@@ -91,7 +87,7 @@ main(int argc, char *argv[])
      */
     key2.data.pri = "non-existant-group";
     memset(&rec2, 0, sizeof(rec2));
-    ret = group->get(group, (KEY *) &key2, (REC *) &rec2);
+    ret = group.get(&group, (KEY *) &key2, (REC *) &rec2);
     if(ret != DB_NOTFOUND) {
         _result = FAIL;
         warnx("fetch unexpected return code");
@@ -104,7 +100,7 @@ main(int argc, char *argv[])
     key2.base.type = SEC;
     key2.data.sec = 1001;
     memset(&rec2, 0, sizeof(rec2));
-    ret = group->get(group, (KEY *) &key2, (REC *) &rec2);
+    ret = group.get(&group, (KEY *) &key2, (REC *) &rec2);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not fetch group record");
@@ -122,7 +118,7 @@ main(int argc, char *argv[])
      */
     key2.data.sec = 8888;
     memset(&rec2, 0, sizeof(rec2));
-    ret = group->get(group, (KEY *) &key2, (REC *) &rec2);
+    ret = group.get(&group, (KEY *) &key2, (REC *) &rec2);
     if(ret != DB_NOTFOUND) {
         _result = FAIL;
         warnx("fetch by gid unexpected return code");
@@ -134,7 +130,7 @@ main(int argc, char *argv[])
      */
     key2.base.type = PRI;
     key2.data.pri = "test-dbng-group";
-    ret = group->delete(group, (KEY *) &key2);
+    ret = group.delete(&group, (KEY *) &key2);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not delete group record");
@@ -145,7 +141,7 @@ main(int argc, char *argv[])
      * Fetch the recently deleted record by primary & secondary indexes.
      */
     memset(&rec2, 0, sizeof(rec2));
-    ret = group->get(group, (KEY *) &key2, (REC *) &rec2);
+    ret = group.get(&group, (KEY *) &key2, (REC *) &rec2);
     if(ret != DB_NOTFOUND) {
         _result = FAIL;
         warnx("fetch unexpected return code");
@@ -154,7 +150,7 @@ main(int argc, char *argv[])
 
     key2.base.type = SEC;
     key2.data.sec = 1001;
-    ret = group->get(group, (KEY *) &key2, (REC *) &rec2);
+    ret = group.get(&group, (KEY *) &key2, (REC *) &rec2);
     if(ret != DB_NOTFOUND) {
         _result = FAIL;
         warnx("fetch by gid unexpected return code");
@@ -174,28 +170,28 @@ main(int argc, char *argv[])
     rec2.count = 4;
     rec2.members = group1_members;
 
-    ret = group->start_txn(group);
+    ret = group.start_txn(&group);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not start txn");
         goto err;
     }
 
-    ret = group->set(group, (KEY *) &key, (REC *) &rec);
+    ret = group.set(&group, (KEY *) &key, (REC *) &rec);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not insert group record");
         goto err;
     }
 
-    ret = group->set(group, (KEY *) &key2, (REC *) &rec2);
+    ret = group.set(&group, (KEY *) &key2, (REC *) &rec2);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not insert group record");
         goto err;
     }
 
-    ret = group->commit(group);
+    ret = group.commit(&group);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not commit txn");
@@ -205,21 +201,21 @@ main(int argc, char *argv[])
     /*
      * Test the rollback by truncating the database.
      */
-    ret = group->start_txn(group);
+    ret = group.start_txn(&group);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not start txn");
         goto err;
     }
 
-    ret = group->truncate(group);
+    ret = group.truncate(&group);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not truncate group service");
         goto err;
     }
 
-    ret = group->rollback(group);
+    ret = group.rollback(&group);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not rollback txn");
@@ -232,7 +228,7 @@ main(int argc, char *argv[])
      */
     GROUP_KEY key4;
     GROUP_REC rec4;
-    ret = group->get(group, (KEY *) &key2, (REC *) &rec4);
+    ret = group.get(&group, (KEY *) &key2, (REC *) &rec4);
     if(ret != 0) {
         _result = FAIL;
         warnx("could not fetch group record");
@@ -245,7 +241,7 @@ main(int argc, char *argv[])
     GROUP_REC *rp;
     int i;
     for(i = 0;
-        (ret = group->next(group, (KEY *) &key4, (REC *) &rec4))
+        (ret = group.next(&group, (KEY *) &key4, (REC *) &rec4))
             != DB_NOTFOUND;
         i++)
     {
@@ -283,15 +279,15 @@ main(int argc, char *argv[])
         goto err;
     }
 
-    if(group->db->cursor != NULL) {
+    if(group.db.cursor != NULL) {
         _result = FAIL;
         warnx("cursor not cleaned up correctly");
         goto err;
     }
 
-err:
-    service_free(&group);
+    service_cleanup(&group);
 
+err:
     return _result;
 }
 

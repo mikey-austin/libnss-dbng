@@ -36,6 +36,6 @@ typedef struct SHADOW_KEY {
 /**
  *
  */
-extern SERVICE *service_shadow_create(void);
+extern void service_shadow_init(SERVICE *service);
 
 #endif

@@ -36,6 +36,6 @@ typedef struct PASSWD_KEY {
 /**
  *
  */
-extern SERVICE *service_passwd_create(void);
+extern void service_passwd_init(SERVICE *service);
 
 #endif
