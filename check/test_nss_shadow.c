@@ -81,7 +81,7 @@ setup_db(void)
     int result = PASS, ret;
     SERVICE shadow;
 
-    service_init(&shadow, TYPE_SHADOW, 0, TEST_BASE);
+    service_init(&shadow, TYPE_SHADOW, DBNG_RW, TEST_BASE);
 
     if(strcmp(shadow.pri, SHADOW_PRI)) {
         result = FAIL;

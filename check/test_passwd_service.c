@@ -8,6 +8,7 @@
 #include <err.h>
 #include <string.h>
 
+#include "../lib/dbng/dbng.h"
 #include "../lib/service-passwd.h"
 
 #define PASS 0
@@ -21,7 +22,7 @@ main(int argc, char *argv[])
     int _result = PASS, ret;
     SERVICE passwd;
 
-    service_init(&passwd, TYPE_PASSWD, 0, TEST_BASE);
+    service_init(&passwd, TYPE_PASSWD, DBNG_RW, TEST_BASE);
 
     if(strcmp(passwd.pri, PASSWD_PRI)
        || strcmp(passwd.sec, PASSWD_SEC))

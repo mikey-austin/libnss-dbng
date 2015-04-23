@@ -22,7 +22,7 @@ main(int argc, char *argv[])
     int _result = PASS, ret;
     SERVICE group;
 
-    service_init(&group, TYPE_GROUP, 0, TEST_BASE);
+    service_init(&group, TYPE_GROUP, DBNG_RW, TEST_BASE);
 
     if(strcmp(group.pri, GROUP_PRI)
        || strcmp(group.sec, GROUP_SEC))

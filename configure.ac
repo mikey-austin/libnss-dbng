@@ -1,5 +1,5 @@
 AC_PREREQ([2.63])
-AC_INIT([libnss-dbng], [0.2.1], [mikey@jackiemclean.net])
+AC_INIT([libnss-dbng], [0.3.0], [mikey@jackiemclean.net])
 AM_INIT_AUTOMAKE
 LT_INIT([dlopen])
 AC_CONFIG_SRCDIR([lib/dbng.c])

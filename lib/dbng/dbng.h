@@ -21,7 +21,7 @@
 #endif
 
 #define DBNG_RO 1
-#define DBNG_Rw 2
+#define DBNG_RW 2
 #define DBNG_PERMS 0644
 
 typedef struct DBNG {

@@ -8,6 +8,7 @@
 #include <err.h>
 #include <string.h>
 
+#include "../lib/dbng/dbng.h"
 #include "../lib/dbng/service.h"
 #include "../lib/service-shadow.h"
 
@@ -22,7 +23,7 @@ main(int argc, char *argv[])
     int _result = PASS, ret;
     SERVICE shadow;
 
-    service_init(&shadow, TYPE_SHADOW, 0, TEST_BASE);
+    service_init(&shadow, TYPE_SHADOW, DBNG_RW, TEST_BASE);
 
     if(strcmp(shadow.pri, SHADOW_PRI)) {
         _result = FAIL;

@@ -204,7 +204,7 @@ setup_db(void)
     int result = PASS, ret;
     SERVICE passwd;
 
-    service_init(&passwd, TYPE_PASSWD, 0, TEST_BASE);
+    service_init(&passwd, TYPE_PASSWD, DBNG_RW, TEST_BASE);
 
     if(strcmp(passwd.pri, PASSWD_PRI)
        || strcmp(passwd.sec, PASSWD_SEC))

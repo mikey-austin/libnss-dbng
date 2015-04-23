@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "../lib/dbng/dbng.h"
 #include "../lib/dbng/service.h"
 
 #define PROGNAME "dbngctl"
@@ -132,7 +133,7 @@ delete(SERVICE *service, const char *data)
 int
 main(int argc, char *argv[])
 {
-    int option, sset = 0, flags = 0, c, prev = '\n', yes = 0;
+    int option, sset = 0, flags = DBNG_RW, c, prev = '\n', yes = 0;
     char *base = DEFAULT_BASE, *key;
     enum CMD cmd = LIST;
     enum TYPE stype;
