@@ -86,8 +86,9 @@ extern DBNG
         }
 
         /* Associate the secondary with the primary. */
-        handle->pri->associate(handle->pri, NULL, handle->sec,
-                               key_creator, 0);
+        handle->pri->associate(
+            handle->pri, NULL, handle->sec,
+            (flags & DBNG_RO ? NULL : key_creator), 0);
     }
 
     return handle;

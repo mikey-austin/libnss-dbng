@@ -230,18 +230,11 @@ static void
 pack_key(SERVICE *service, const KEY *key, DBT *dbkey)
 {
     SHADOW_KEY *skey = (SHADOW_KEY *) key;
-    char *buf = NULL, *s;
-    int len;
+    char *buf = dbkey->data, *s;
 
-    len = key_size(NULL, key);
-    buf = xcalloc(len, sizeof(char));
     memcpy(buf, &(skey->base.type), sizeof(skey->base.type));
     memcpy(buf + sizeof(skey->base.type), skey->data.pri,
            strlen(skey->data.pri) + 1);
-
-    memset(dbkey, 0, sizeof(*dbkey));
-    dbkey->data = buf;
-    dbkey->size = len;
 }
 
 static void
@@ -251,8 +244,8 @@ pack_rec(SERVICE *service, const REC *rec, DBT *dbrec)
     char *buf = NULL, *s;
     int len, slen = 0;
 
-    len = rec_size(NULL, rec);
-    buf = xcalloc(sizeof(char), len);
+    buf = dbrec->data;
+    len = dbrec->size;
 
     s = buf;
     memcpy(s, srec->name, (slen = (strlen(srec->name) + 1)));

@@ -202,10 +202,16 @@ key_creator(DB *dbp, const DBT *pkey, const DBT *pdata, DBT *skey)
 
     /* Create the secondary index on the uid. */
     unpack_rec(NULL, (REC *) &rec, pdata);
+    memset(&key, 0, sizeof(key));
     key.base.type = SEC;
     key.data.sec = rec.uid;
-    pack_key(NULL, (KEY *) &key, skey);
+    int size = key_size(NULL, (KEY *) &key);
+
+    memset(skey, 0, sizeof(*skey));
+    skey->data = xcalloc(1, size);
+    skey->size = size;
     skey->flags = DB_DBT_APPMALLOC;
+    pack_key(NULL, (KEY *) &key, skey);
 
     return 0;
 }
@@ -239,12 +245,7 @@ static void
 pack_key(SERVICE *service, const KEY *key, DBT *dbkey)
 {
     PASSWD_KEY *pkey = (PASSWD_KEY *) key;
-    char *buf = NULL, *s;
-    int len;
-
-    len = key_size(NULL, key);
-    buf = xcalloc(len, sizeof(char));
-    memcpy(buf, &(pkey->base.type), sizeof(pkey->base.type));
+    unsigned char *buf = dbkey->data, *s;
 
     switch(pkey->base.type) {
     case PRI:
@@ -257,10 +258,6 @@ pack_key(SERVICE *service, const KEY *key, DBT *dbkey)
                sizeof(pkey->data.sec));
         break;
     }
-
-    memset(dbkey, 0, sizeof(*dbkey));
-    dbkey->data = buf;
-    dbkey->size = len;
 }
 
 static void
@@ -270,8 +267,8 @@ pack_rec(SERVICE *service, const REC *rec, DBT *dbrec)
     char *buf = NULL, *s;
     int len, slen = 0;
 
-    len = rec_size(NULL, rec);
-    buf = xcalloc(sizeof(char), len);
+    buf = dbrec->data;
+    len = dbrec->size;
 
     s = buf;
     memcpy(s, &prec->uid, (slen = sizeof(prec->uid)));
