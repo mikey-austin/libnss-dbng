@@ -22,7 +22,7 @@
 
 #define DBNG_RO 0
 #define DBNG_Rw 1
-#define DBNG_PERMS 0600
+#define DBNG_PERMS 0644
 
 typedef struct DBNG {
     DB_TXN *txn;
