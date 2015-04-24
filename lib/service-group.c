@@ -392,7 +392,7 @@ validate(SERVICE *service, const KEY *key, const REC *rec)
     gid_t gid = getgid();
  
     if(MIN_GID > 0) {
-        return ((gid == 0 && prec->gid >= MIN_GID) || prec->gid == gid);
+        return ((gid < MIN_GID && prec->gid >= MIN_GID) || prec->gid == gid);
     }
     else {
         return 1;

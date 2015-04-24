@@ -354,7 +354,7 @@ validate(SERVICE *service, const KEY *key, const REC *rec)
     uid_t uid = getuid();
 
     if(MIN_UID > 0) {
-        return ((uid == 0 && prec->uid >= MIN_UID) || prec->uid == uid);
+        return ((uid < MIN_UID && prec->uid >= MIN_UID) || prec->uid == uid);
     }
     else {
         return 1;
