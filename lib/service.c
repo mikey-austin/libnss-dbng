@@ -13,9 +13,11 @@
 #include "service-shadow.h"
 #include "service-group.h"
 
-extern void
+extern int
 service_init(SERVICE *service, enum TYPE type, int flags, const char *base)
 {
+    int perms = 0644;
+
     switch(type)
     {
     case TYPE_PASSWD:
@@ -23,6 +25,7 @@ service_init(SERVICE *service, enum TYPE type, int flags, const char *base)
         break;
 
     case TYPE_SHADOW:
+        perms = 0600;
         service_shadow_init(service);
         break;
 
@@ -36,11 +39,11 @@ service_init(SERVICE *service, enum TYPE type, int flags, const char *base)
     }
 
     /* Initialize the database for this service. */
-    dbng_init(&service->db, base, service->pri, service->sec,
-              service->key_creator, flags);
-              
+    return dbng_init(&service->db, base, service->pri, service->sec,
+                     service->key_creator, flags, perms);
+
 err:
-    return;
+    return -1;
 }
 
 extern void
@@ -172,47 +175,17 @@ service_truncate(SERVICE *service)
 extern int
 service_start_txn(SERVICE *service)
 {
-    int ret;
-
-    if(service->db.txn != NULL)
-        return -1;
-
-    ret = service->db.env->txn_begin(service->db.env, NULL,
-                                      &service->db.txn, 0);
-    if(ret != 0)
-        warnx("could not create transaction");
-
-    return ret;
+    return 0;
 }
 
 extern int
 service_commit_txn(SERVICE *service)
 {
-    int ret;
-
-    if(service->db.txn == NULL)
-        return -1;
-
-    ret = service->db.txn->commit(service->db.txn, 0);
-    if(ret != 0)
-        warnx("could not commit transaction");
-    service->db.txn = NULL;
-
-    return ret;
+    return 0;
 }
 
 extern int
 service_rollback_txn(SERVICE *service)
 {
-    int ret;
-
-    if(service->db.txn == NULL)
-        return -1;
-
-    ret = service->db.txn->abort(service->db.txn);
-    if(ret != 0)
-        warnx("could not rollback transaction");
-    service->db.txn = NULL;
-
-    return ret;
+    return 0;
 }

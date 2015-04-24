@@ -12,14 +12,20 @@
 
 #define MAX_PATH 256
 
-extern DBNG
-*dbng_init(DBNG *handle, const char *base, const char *pri, const char *sec,
-             int (*key_creator)(DB *, const DBT *, const DBT *,DBT *),
-             int flags)
+extern int
+dbng_init(DBNG *handle, const char *base, const char *pri, const char *sec,
+          int (*key_creator)(DB *, const DBT *, const DBT *,DBT *),
+          int flags, int perms)
 {
     int db_flags, ret;
     char pri_path[MAX_PATH];
     char sec_path[MAX_PATH];
+    char *sep;
+
+    strncpy(pri_path, base, MAX_PATH);
+    if((sep = strrchr(base, '/')) != NULL && *(sep + 1))
+        strncat(pri_path, "/", MAX_PATH);
+    strncat(pri_path, pri, MAX_PATH);
 
     memset(handle, 0, sizeof(*handle));
     handle->txn    = NULL;
@@ -27,44 +33,6 @@ extern DBNG
     handle->env    = NULL;
     handle->pri    = NULL;
     handle->sec    = NULL;
-
-    /* Open & setup environment. */
-    db_flags = 0;
-    if(!(flags & DBNG_RO)) {
-        db_flags |= DB_CREATE
-            | DB_INIT_MPOOL
-            | DB_INIT_TXN
-            | DB_INIT_LOCK;
-
-        ret = db_env_create(&handle->env, 0);
-        if(ret != 0) {
-            warnx("error creating db environment: %s",
-                  db_strerror(ret));
-            goto err;
-        }
-
-        ret = handle->env->open(handle->env, base, db_flags, 0);
-        if(ret != 0) {
-            warnx("error opening db environment: %s",
-                  db_strerror(ret));
-            goto err;
-        }
-
-        strncpy(pri_path, pri, MAX_PATH);
-        if(sec != NULL)
-            strncpy(sec_path, sec, MAX_PATH);
-    }
-    else {
-        strncpy(pri_path, base, MAX_PATH);
-        strncat(pri_path, "/", MAX_PATH);
-        strncat(pri_path, pri, MAX_PATH);
-
-        if(sec != NULL) {
-            strncpy(sec_path, base, MAX_PATH);
-            strncat(sec_path, "/", MAX_PATH);
-            strncat(sec_path, sec, MAX_PATH);
-        }
-    }
 
     /* Open & setup primary database. */
     ret = db_create(&handle->pri, handle->env, 0);
@@ -74,17 +42,21 @@ extern DBNG
         goto err;
     }
 
-    db_flags = (flags & DBNG_RO ? DB_RDONLY : DB_CREATE | DB_AUTO_COMMIT);
+    db_flags = (flags & DBNG_RO ? DB_RDONLY : DB_CREATE);
     ret = handle->pri->open(handle->pri, NULL, pri_path, NULL, DB_BTREE,
-                                db_flags, DBNG_PERMS);
+                            db_flags, perms);
     if(ret != 0) {
-        warnx("db open (%s/%s) failed: %s", base, pri_path,
-              db_strerror(ret));
+        warnx("db open (%s) failed: %s", pri_path, db_strerror(ret));
         goto err;
     }
 
     /* Open & setup secondary database if it exists. */
     if(sec != NULL) {
+        strncpy(sec_path, base, MAX_PATH);
+        if((sep = strrchr(base, '/')) != NULL && *(sep + 1))
+            strncat(sec_path, "/", MAX_PATH);
+        strncat(sec_path, sec, MAX_PATH);
+
         ret = db_create(&handle->sec, handle->env, 0);
         if(ret != 0) {
             warnx("error opening secondary db: %s", db_strerror(ret));
@@ -98,10 +70,9 @@ extern DBNG
         }
 
         ret = handle->sec->open(handle->sec, NULL, sec_path, NULL, DB_BTREE,
-                                db_flags, DBNG_PERMS);
+                                db_flags, perms);
         if(ret != 0) {
-            warnx("db open (%s/%s) failed: %s", base, sec_path,
-                  db_strerror(ret));
+            warnx("db open (%s) failed: %s", sec_path, db_strerror(ret));
             goto err;
         }
 
@@ -111,14 +82,16 @@ extern DBNG
             (flags & DBNG_RO ? NULL : key_creator), 0);
     }
 
-    return handle;
+    return 0;
 
 err:
     if(handle->pri != NULL)
         handle->pri->close(handle->pri, 0);
+    if(handle->sec != NULL)
+        handle->sec->close(handle->sec, 0);
     if(handle->env != NULL)
         handle->env->close(handle->env, 0);
-    return NULL;
+    return -1;
 }
 
 extern void

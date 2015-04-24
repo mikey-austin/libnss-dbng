@@ -66,7 +66,7 @@ struct SERVICE {
 /**
  *
  */
-extern void service_init(SERVICE *service, enum TYPE type, int flags, const char *base);
+extern int service_init(SERVICE *service, enum TYPE type, int flags, const char *base);
 
 /**
  *

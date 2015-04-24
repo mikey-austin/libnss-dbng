@@ -194,7 +194,9 @@ main(int argc, char *argv[])
     }
 
     SERVICE service;
-    service_init(&service, stype, flags, base);
+    if(service_init(&service, stype, flags, base) < 0) {
+        errx(1, "could not initialize service...");
+    }
 
     switch(cmd) {
     case LIST:

@@ -22,7 +22,11 @@ main(int argc, char *argv[])
     int _result = PASS, ret;
     SERVICE group;
 
-    service_init(&group, TYPE_GROUP, 0, TEST_BASE);
+    if(service_init(&group, TYPE_GROUP, 0, TEST_BASE) < 0) {
+        _result = FAIL;
+        warnx("could not initialize service...");
+        goto err;
+    }
 
     if(strcmp(group.pri, GROUP_PRI)
        || strcmp(group.sec, GROUP_SEC))
@@ -195,30 +199,6 @@ main(int argc, char *argv[])
     if(ret != 0) {
         _result = FAIL;
         warnx("could not commit txn");
-        goto err;
-    }
-
-    /*
-     * Test the rollback by truncating the database.
-     */
-    ret = group.start_txn(&group);
-    if(ret != 0) {
-        _result = FAIL;
-        warnx("could not start txn");
-        goto err;
-    }
-
-    ret = group.truncate(&group);
-    if(ret != 0) {
-        _result = FAIL;
-        warnx("could not truncate group service");
-        goto err;
-    }
-
-    ret = group.rollback(&group);
-    if(ret != 0) {
-        _result = FAIL;
-        warnx("could not rollback txn");
         goto err;
     }
 

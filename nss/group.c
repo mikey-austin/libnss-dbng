@@ -37,10 +37,14 @@ _nss_dbng_setgrent(void)
     enum nss_status status = NSS_STATUS_SUCCESS;
 
     NSS_DBNG_LOCK();
-    service_init(&Gr_service, TYPE_GROUP, DBNG_RO, DEFAULT_BASE);
+    if(service_init(&Gr_service, TYPE_GROUP, DBNG_RO, DEFAULT_BASE) < 0) {
+        status = NSS_STATUS_UNAVAIL;
+        goto cleanup;
+    }
     init = 1;
-    NSS_DBNG_UNLOCK();
 
+cleanup:
+    NSS_DBNG_UNLOCK();
     return status;
 }
 
@@ -68,8 +72,11 @@ _nss_dbng_getgrent_r(struct group *gbuf, char *buf, size_t buflen,
 
     NSS_DBNG_LOCK();
 
-    if(init != 1)
+    if(init != 1) {
+        *errnop = ENOENT;
+        status = NSS_STATUS_NOTFOUND;
         goto cleanup;
+    }
 
     res = Gr_service.next(&Gr_service, (KEY *) &key, (REC *) &rec);
     switch(res) {
@@ -104,7 +111,10 @@ _nss_dbng_getgrnam_r(const char* name, struct group *gbuf,
     int res;
     enum nss_status status;
 
-    service_init(&group, TYPE_GROUP, DBNG_RO, DEFAULT_BASE);
+    if(service_init(&group, TYPE_GROUP, DBNG_RO, DEFAULT_BASE) < 0) {
+        *errnop = ENOENT;
+        return NSS_STATUS_UNAVAIL;
+    }
 
     char uname[strlen(name) + 1];
     strcpy(uname, name);
@@ -146,7 +156,10 @@ _nss_dbng_getgrgid_r(gid_t gid, struct group *gbuf,
     int res;
     enum nss_status status;
 
-    service_init(&group, TYPE_GROUP, DBNG_RO, DEFAULT_BASE);
+    if(service_init(&group, TYPE_GROUP, DBNG_RO, DEFAULT_BASE) < 0) {
+        *errnop = ENOENT;
+        return NSS_STATUS_UNAVAIL;
+    }
 
     /* Query on the secondary index. */
     key.base.type = SEC;

@@ -21,7 +21,11 @@ main(int argc, char *argv[])
     int _result = PASS, ret;
     SERVICE passwd;
 
-    service_init(&passwd, TYPE_PASSWD, 0, TEST_BASE);
+    if(service_init(&passwd, TYPE_PASSWD, 0, TEST_BASE) < 0) {
+        _result = FAIL;
+        warnx("could not initialize service");
+        goto err;
+    }
 
     if(strcmp(passwd.pri, PASSWD_PRI)
        || strcmp(passwd.sec, PASSWD_SEC))
@@ -221,34 +225,6 @@ main(int argc, char *argv[])
         goto err;
     }
 
-    /*
-     * Test the rollback by truncating the database.
-     */
-    ret = passwd.start_txn(&passwd);
-    if(ret != 0) {
-        _result = FAIL;
-        warnx("could not start txn");
-        goto err;
-    }
-
-    ret = passwd.truncate(&passwd);
-    if(ret != 0) {
-        _result = FAIL;
-        warnx("could not truncate passwd service");
-        goto err;
-    }
-
-    ret = passwd.rollback(&passwd);
-    if(ret != 0) {
-        _result = FAIL;
-        warnx("could not rollback txn");
-        goto err;
-    }
-
-    /*
-     * Attempt to fetch the record. Should succeed as previous
-     * transaction was rolled back.
-     */
     PASSWD_KEY key4;
     PASSWD_REC rec4;
     ret = passwd.get(&passwd, (KEY *) &key2, (REC *) &rec4);

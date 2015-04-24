@@ -22,7 +22,11 @@ main(int argc, char *argv[])
     int _result = PASS, ret;
     SERVICE shadow;
 
-    service_init(&shadow, TYPE_SHADOW, 0, TEST_BASE);
+    if(service_init(&shadow, TYPE_SHADOW, 0, TEST_BASE) < 0) {
+        _result = FAIL;
+        warnx("could not initialize shadow service");
+        goto err;
+    }
 
     if(strcmp(shadow.pri, SHADOW_PRI)) {
         _result = FAIL;
@@ -158,30 +162,6 @@ main(int argc, char *argv[])
     if(ret != 0) {
         _result = FAIL;
         warnx("could not commit txn");
-        goto err;
-    }
-
-    /*
-     * Test the rollback by truncating the database.
-     */
-    ret = shadow.start_txn(&shadow);
-    if(ret != 0) {
-        _result = FAIL;
-        warnx("could not start txn");
-        goto err;
-    }
-
-    ret = shadow.truncate(&shadow);
-    if(ret != 0) {
-        _result = FAIL;
-        warnx("could not truncate shadow service");
-        goto err;
-    }
-
-    ret = shadow.rollback(&shadow);
-    if(ret != 0) {
-        _result = FAIL;
-        warnx("could not rollback txn");
         goto err;
     }
 

@@ -26,7 +26,10 @@ _nss_dbng_getspnam_r(const char* name, struct spwd *spbuf,
     int res;
     enum nss_status status;
 
-    service_init(&shadow, TYPE_SHADOW, DBNG_RO, DEFAULT_BASE);
+    if(service_init(&shadow, TYPE_SHADOW, DBNG_RO, DEFAULT_BASE) < 0) {
+        *errnop = ENOENT;
+        return NSS_STATUS_UNAVAIL;
+    }
 
     char uname[strlen(name) + 1];
     strcpy(uname, name);

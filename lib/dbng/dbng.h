@@ -20,9 +20,8 @@
 #  include <db.h>
 #endif
 
+#define DBNG_RW 0
 #define DBNG_RO 1
-#define DBNG_Rw 2
-#define DBNG_PERMS 0644
 
 typedef struct DBNG {
     DB_TXN *txn;
@@ -35,12 +34,13 @@ typedef struct DBNG {
 /**
  *
  */
-extern DBNG *dbng_create(DBNG *handle,
-                         const char *base,
-                         const char *pri,
-                         const char *sec,
-                         int (*key_creator)(DB *, const DBT *, const DBT *, DBT *),
-                         int flags);
+extern int dbng_init(DBNG *handle,
+                     const char *base,
+                     const char *pri,
+                     const char *sec,
+                     int (*key_creator)(DB *, const DBT *, const DBT *, DBT *),
+                     int flags,
+                     int perms);
 
 /**
  *
