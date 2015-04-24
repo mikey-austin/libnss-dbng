@@ -13,6 +13,7 @@
 #define ERRBUFLEN   256
 #define NMATCH      4   /* A match per group column. */
 
+static int validate(SERVICE *, const KEY *, const REC *);
 static void print(SERVICE *, const KEY *, const REC *);
 static int parse(SERVICE *, const char *, KEY *, REC *);
 static KEY *new_key(SERVICE *);
@@ -36,6 +37,7 @@ service_group_init(SERVICE *service)
 
     /* Set implemented functions. */
     service->print = print;
+    service->validate = validate;
     service->parse = parse;
     service->key_creator = key_creator;
     service->pack_key = pack_key;
@@ -381,4 +383,18 @@ unpack_rec(SERVICE *service, REC *rec, const DBT *dbrec)
     }
 
     grec->members[i] = NULL;
+}
+
+static int
+validate(SERVICE *service, const KEY *key, const REC *rec)
+{
+    const GROUP_REC *prec = (const GROUP_REC *) rec;
+    gid_t gid = getgid();
+ 
+    if(MIN_GID > 0) {
+        return ((gid == 0 && prec->gid >= MIN_GID) || prec->gid == gid);
+    }
+    else {
+        return 1;
+    }
 }

@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -DDEFAULT_BASE='"$(DEFAULT_BASE)"'
+AM_CPPFLAGS = -DDEFAULT_BASE='"$(DEFAULT_BASE)"' -DMIN_UID='$(MIN_UID)' -DMIN_GID='$(MIN_GID)'
 lib_LTLIBRARIES = libdbng.la
 include_HEADERS = dbng/service.h dbng/dbng.h
 noinst_HEADERS = dbng/utils.h service-passwd.h service-group.h service-shadow.h

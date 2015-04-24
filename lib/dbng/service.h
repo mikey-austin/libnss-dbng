@@ -59,6 +59,7 @@ struct SERVICE {
     void (*pack_rec)(SERVICE *, const REC *, DBT *);
     void (*unpack_key)(SERVICE *, KEY *, const DBT *);
     void (*unpack_rec)(SERVICE *, REC *, const DBT *);
+    int (*validate)(SERVICE *, const KEY *, const REC *);
 
     enum TYPE type;
 };
@@ -87,6 +88,11 @@ extern int service_set_rec(SERVICE *service, KEY *key, REC *rec);
  *
  */
 extern int service_next_rec(SERVICE *service, KEY *key, REC *rec);
+
+/**
+ *
+ */
+extern int service_validate(SERVICE *service, const KEY *key, const REC *rec);
 
 /**
  *

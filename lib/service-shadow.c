@@ -60,6 +60,7 @@ service_shadow_init(SERVICE *service)
     service->start_txn = service_start_txn;
     service->commit = service_commit_txn;
     service->rollback = service_rollback_txn;
+    service->validate = service_validate;
 }
 
 static void

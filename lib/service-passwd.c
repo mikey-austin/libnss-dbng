@@ -5,6 +5,7 @@
  * @date 2015
  */
 
+#include <unistd.h>
 #include <string.h>
 #include <regex.h>
 
@@ -14,6 +15,7 @@
 #define NMATCH    7   /* A match per passwd column. */
 
 static void print(SERVICE *, const KEY *, const REC *);
+static int validate(SERVICE *, const KEY *, const REC *);
 static int parse(SERVICE *, const char *, KEY *, REC *);
 static KEY *new_key(SERVICE *);
 static REC *new_rec(SERVICE *);
@@ -48,6 +50,7 @@ service_passwd_init(SERVICE *service)
     service->new_rec = new_rec;
     service->key_init = key_init;
     service->cleanup = NULL;
+    service->validate = validate;
 
     /* Set inherited functions. */
     service->get = service_get_rec;
@@ -342,4 +345,18 @@ unpack_rec(SERVICE *service, REC *rec, const DBT *dbrec)
 
     prec->homedir = buf;
     buf += strlen(prec->homedir) + 1;
+}
+
+static int
+validate(SERVICE *service, const KEY *key, const REC *rec)
+{
+    const PASSWD_REC *prec = (const PASSWD_REC *) rec;
+    uid_t uid = getuid();
+
+    if(MIN_UID > 0) {
+        return ((uid == 0 && prec->uid >= MIN_UID) || prec->uid == uid);
+    }
+    else {
+        return 1;
+    }
 }

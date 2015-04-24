@@ -1,5 +1,5 @@
 AC_PREREQ([2.63])
-AC_INIT([libnss-dbng], [0.4.0], [mikey@jackiemclean.net])
+AC_INIT([libnss-dbng], [0.5.0], [mikey@jackiemclean.net])
 AM_INIT_AUTOMAKE
 LT_INIT([dlopen])
 AC_CONFIG_SRCDIR([lib/dbng.c])
@@ -24,6 +24,16 @@ fi
 AC_ARG_VAR([TEST_BASE], [test base for database files])
 if test -z ${TEST_BASE}; then
     TEST_BASE="/tmp/"
+fi
+
+AC_ARG_VAR([MIN_UID], [minimum UID for database update/read operations])
+if test -z ${MIN_UID}; then
+   MIN_UID=0
+fi
+
+AC_ARG_VAR([MIN_GID], [minimum GID for database update/read operations])
+if test -z ${MIN_GID}; then
+   MIN_GID=0
 fi
 
 AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [build the library in debug mode])],

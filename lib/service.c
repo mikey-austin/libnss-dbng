@@ -73,6 +73,9 @@ service_get_rec(SERVICE *service, KEY *key, REC *rec)
     if(ret == 0)
         service->unpack_rec(service, rec, &dbval);
 
+    if(!service->validate(service, key, rec))
+        return DB_NOTFOUND;
+
     return ret;
 }
 
@@ -86,6 +89,9 @@ service_set_rec(SERVICE *service, KEY *key, REC *rec)
     int rsize = service->rec_size(service, rec);
     unsigned char kbuf[ksize];
     unsigned char rbuf[rsize];
+
+    if(!service->validate(service, key, rec))
+        return -1;
 
     memset(&dbkey, 0, sizeof(dbkey));
     memset(kbuf, 0, ksize);
@@ -112,6 +118,11 @@ service_delete_rec(SERVICE *service, KEY *key)
     DB *db = service->db.pri; /* Secondary database updated automatically. */
     int ksize = service->key_size(service, key);
     unsigned char kbuf[ksize];
+    REC *rec;
+
+    rec = service->new_rec(service);
+    if((ret = service->get(service, key, rec)) != 0)
+        goto cleanup;
 
     memset(kbuf, 0, ksize);
     memset(&dbkey, 0, sizeof(dbkey));
@@ -120,6 +131,8 @@ service_delete_rec(SERVICE *service, KEY *key)
     service->pack_key(service, key, &dbkey);
     ret = db->del(db, service->db.txn, &dbkey, 0);
 
+cleanup:
+    xfree((void **) &rec);
     return ret;
 }
 
@@ -141,6 +154,7 @@ service_next_rec(SERVICE *service, KEY *key, REC *rec)
     }
 
     cursor = service->db.cursor;
+tryagain:
     memset(&dbkey, 0, sizeof(dbkey));
     memset(&dbval, 0, sizeof(dbval));
 
@@ -149,6 +163,8 @@ service_next_rec(SERVICE *service, KEY *key, REC *rec)
     case 0:
         service->unpack_key(service, key, &dbkey);
         service->unpack_rec(service, rec, &dbval);
+        if(!service->validate(service, key, rec))
+            goto tryagain;
         break;
 
     case DB_NOTFOUND:
@@ -170,6 +186,12 @@ service_truncate(SERVICE *service)
     ret = db->truncate(db, service->db.txn, &truncated, 0);
 
     return ret;
+}
+
+extern int
+service_validate(SERVICE *service, const KEY *key, const REC *rec)
+{
+    return 1;
 }
 
 extern int
