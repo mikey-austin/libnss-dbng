@@ -73,7 +73,7 @@ add(service, raw)
         REC *rec = service->new_rec(service);
 
         if(!service->parse(service, raw, key, rec))
-            croak("could not parse passwd record");
+            croak("could not parse record");
 
         if(service->set(service, key, rec))
             croak("could not insert passwd record");            
@@ -153,12 +153,12 @@ shadow_get(service, pri_key)
             srec = (SHADOW_REC *) rec;
             hv_store(out, "name", strlen("name"), newSVpv(srec->name, strlen(srec->name)), 0);
             hv_store(out, "passwd", strlen("passwd"), newSVpv(srec->passwd, strlen(srec->passwd)), 0);
-            hv_store(out, "lstchg", strlen("lstchg"), newSVuv(srec->lstchg), 0);
-            hv_store(out, "min", strlen("min"), newSVuv(srec->min), 0);
-            hv_store(out, "max", strlen("max"), newSVuv(srec->max), 0);
-            hv_store(out, "warn", strlen("warn"), newSVuv(srec->warn), 0);
-            hv_store(out, "inact", strlen("inact"), newSVuv(srec->inact), 0);
-            hv_store(out, "expire", strlen("expire"), newSVuv(srec->expire), 0);
+            hv_store(out, "lstchg", strlen("lstchg"), newSViv(srec->lstchg), 0);
+            hv_store(out, "min", strlen("min"), newSViv(srec->min), 0);
+            hv_store(out, "max", strlen("max"), newSViv(srec->max), 0);
+            hv_store(out, "warn", strlen("warn"), newSViv(srec->warn), 0);
+            hv_store(out, "inact", strlen("inact"), newSViv(srec->inact), 0);
+            hv_store(out, "expire", strlen("expire"), newSViv(srec->expire), 0);
             out_ref = newRV_noinc((SV *) out);
         }
 
