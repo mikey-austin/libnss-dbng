@@ -15,10 +15,10 @@ $group->truncate;
 my $res = $group->get('chris');
 is($res, undef, 'get failed as expected');
 
-$group->add('lock:x:54:mikey,dexter,gordon');
+$group->add('lock:x:10000:mikey,dexter,gordon');
 $res = $group->get('lock');
 is(ref $res, 'HASH', 'group found');
-is($res->{gid}, 54);
+is($res->{gid}, 10000);
 is($res->{name}, 'lock');
 is($res->{passwd}, 'x');
 is(ref $res->{members}, 'ARRAY');

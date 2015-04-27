@@ -77,8 +77,12 @@ add(service, raw)
         if(!service->parse(service, raw, key, rec))
             croak("could not parse record");
 
-        if((ret = service->set(service, key, rec)) != 0)
-            croak("could not insert record %s", db_strerror(ret));
+        if((ret = service->set(service, key, rec)) != 0) {
+            if(ret > 0)
+                croak("could not insert record, validation failed");
+            else
+                croak("could not insert record %s", db_strerror(ret));
+        }
         free(key);
         free(rec);
 
