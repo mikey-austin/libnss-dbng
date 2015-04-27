@@ -1,6 +1,5 @@
 package DBNG::Service;
 
-use 5.018004;
 use strict;
 use warnings;
 

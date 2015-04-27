@@ -7,8 +7,8 @@
 
 #include <string.h>
 
-#include "dbng/dbng.h"
-#include "dbng/utils.h"
+#include "dbng.h"
+#include "utils.h"
 
 #define MAX_PATH 256
 

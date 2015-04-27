@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use Env qw(TEST_BASE);
 
 use Test::More tests => 13;
 BEGIN {
@@ -7,7 +8,7 @@ BEGIN {
     use_ok('DBNG::Service::Passwd');
 };
 
-my $passwd = DBNG::Service::Passwd->new('/home/mikey/tmp/dbng-test');
+my $passwd = DBNG::Service::Passwd->new($ENV{TEST_BASE} || '/home/mikey/tmp/dbng-test');
 isa_ok($passwd, 'DBNG::Service::Passwd');
 $passwd->truncate;
 

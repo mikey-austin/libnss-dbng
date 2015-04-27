@@ -8,7 +8,7 @@
 #ifndef SERVICE_PASSWD_H
 #define SERVICE_PASSWD_H
 
-#include "dbng/service.h"
+#include "service.h"
 
 #define PASSWD_PRI "passwd.db"
 #define PASSWD_SEC "passwd-uid.db"

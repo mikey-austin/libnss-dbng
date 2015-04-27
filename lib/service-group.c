@@ -9,7 +9,7 @@
 #include <regex.h>
 
 #include "service-group.h"
-#include "dbng/utils.h"
+#include "utils.h"
 
 #define ERRBUFLEN   256
 #define NMATCH      4   /* A match per group column. */

@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use Env qw(TEST_BASE);
 
 use Test::More tests => 14;
 BEGIN {
@@ -7,7 +8,7 @@ BEGIN {
     use_ok('DBNG::Service::Shadow');
 };
 
-my $shadow = DBNG::Service::Shadow->new('/home/mikey/tmp/dbng-test');
+my $shadow = DBNG::Service::Shadow->new($ENV{TEST_BASE} || '/home/mikey/tmp/dbng-test');
 isa_ok($shadow, 'DBNG::Service::Shadow');
 $shadow->truncate;
 

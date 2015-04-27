@@ -8,7 +8,11 @@
 #ifndef DBNG_H
 #define DBNG_H
 
-#include "../nss/nss-dbng.h"
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#else
+#  error You must use autotools to build this!
+#endif
 
 #ifdef HAVE_DB5_DB_H
 #  include <db5/db.h>

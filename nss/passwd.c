@@ -12,7 +12,7 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "../lib/dbng/service.h"
+#include "../lib/service.h"
 #include "../lib/service-passwd.h"
 
 #define NSS_DBNG_LOCK()                \

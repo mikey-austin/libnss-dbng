@@ -8,7 +8,6 @@
 #include <err.h>
 #include <string.h>
 
-#include "../lib/dbng/service.h"
 #include "../lib/service-group.h"
 
 #define PASS 0

@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use Env qw(TEST_BASE);
 
 use Test::More tests => 14;
 BEGIN {
@@ -7,7 +8,7 @@ BEGIN {
     use_ok('DBNG::Service::Group');
 };
 
-my $group = DBNG::Service::Group->new('/home/mikey/tmp/dbng-test');
+my $group = DBNG::Service::Group->new($ENV{TEST_BASE} || '/home/mikey/tmp/dbng-test');
 isa_ok($group, 'DBNG::Service::Group');
 $group->truncate;
 

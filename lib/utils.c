@@ -3,7 +3,7 @@
  *
  */
 
-#include "dbng/utils.h"
+#include "utils.h"
 
 extern void
 *xmalloc(size_t size)

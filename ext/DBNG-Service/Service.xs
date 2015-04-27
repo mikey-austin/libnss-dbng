@@ -4,7 +4,7 @@
 #include "XSUB.h"
 
 #include "ppport.h"
-#include <dbng/service.h>
+#include <service.h>
 #include <service-passwd.h>
 #include <service-group.h>
 #include <service-shadow.h>
@@ -63,6 +63,7 @@ delete(service, pri_key)
         service->key_init(service, key, PRI, (void *) pri_key);
         if(service->delete(service, key) != 0)
             croak("could not delete %s", pri_key);
+        free(key);
 
 void
 add(service, raw)
@@ -71,12 +72,15 @@ add(service, raw)
     CODE:
         KEY *key = service->new_key(service);
         REC *rec = service->new_rec(service);
+        int ret;
 
         if(!service->parse(service, raw, key, rec))
             croak("could not parse record");
 
-        if(service->set(service, key, rec))
-            croak("could not insert passwd record");            
+        if((ret = service->set(service, key, rec)) != 0)
+            croak("could not insert record %s", db_strerror(ret));
+        free(key);
+        free(rec);
 
 SV *
 passwd_get(service, pri_key)
@@ -101,6 +105,8 @@ passwd_get(service, pri_key)
             hv_store(out, "homedir", strlen("homedir"), newSVpv(prec->homedir, strlen(prec->homedir)), 0);
             out_ref = newRV_noinc((SV *) out);
         }
+        free(key);
+        free(rec);
 
         RETVAL = out_ref;
     OUTPUT:
@@ -132,6 +138,8 @@ group_get(service, pri_key)
 
             out_ref = newRV_noinc((SV *) out);
         }
+        free(key);
+        free(rec);
 
         RETVAL = out_ref;
     OUTPUT:
@@ -161,6 +169,8 @@ shadow_get(service, pri_key)
             hv_store(out, "expire", strlen("expire"), newSViv(srec->expire), 0);
             out_ref = newRV_noinc((SV *) out);
         }
+        free(key);
+        free(rec);
 
         RETVAL = out_ref;
     OUTPUT:

@@ -7,8 +7,8 @@
 
 #include <string.h>
 
-#include "dbng/service.h"
-#include "dbng/utils.h"
+#include "service.h"
+#include "utils.h"
 #include "service-passwd.h"
 #include "service-shadow.h"
 #include "service-group.h"
