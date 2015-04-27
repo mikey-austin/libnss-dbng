@@ -1,4 +1,4 @@
-package DBNG::Service::Passwd;
+package DBNG::Service::Group;
 
 use strict;
 use warnings;
@@ -6,12 +6,12 @@ use base qw(DBNG::Service);
 
 sub new {
     my ($class, $base) = @_;
-    $class->SUPER::new(DBNG::Service::TYPE_PASSWD, $base);
+    $class->SUPER::new(DBNG::Service::TYPE_GROUP, $base);
 }
 
 sub get {
     my ($self, $key) = @_;
-    $self->passwd_get($key);
+    $self->group_get($key);
 }
 
 1;

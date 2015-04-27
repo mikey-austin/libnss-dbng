@@ -9,7 +9,6 @@
 #define SERVICE_SHADOW_H
 
 #include "dbng/service.h"
-#include "dbng/utils.h"
 
 #define SHADOW_PRI "shadow.db"
 

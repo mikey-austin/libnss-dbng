@@ -9,6 +9,7 @@
 #include <regex.h>
 
 #include "service-shadow.h"
+#include "dbng/utils.h"
 
 #define ERRBUFLEN 256
 #define NMATCH    8   /* A match per shadow column. */

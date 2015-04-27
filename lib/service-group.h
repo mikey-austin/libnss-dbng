@@ -11,7 +11,6 @@
 #include <grp.h>
 
 #include "dbng/service.h"
-#include "dbng/utils.h"
 
 #define GROUP_PRI "group.db"
 #define GROUP_SEC "group-gid.db"

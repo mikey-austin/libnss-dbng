@@ -6,6 +6,8 @@
 #include "ppport.h"
 #include <dbng/service.h>
 #include <service-passwd.h>
+#include <service-group.h>
+#include <service-shadow.h>
 
 typedef SERVICE * DBNG__Service;
 
@@ -97,7 +99,67 @@ passwd_get(service, pri_key)
             hv_store(out, "gecos", strlen("gecos"), newSVpv(prec->gecos, strlen(prec->gecos)), 0);
             hv_store(out, "shell", strlen("shell"), newSVpv(prec->shell, strlen(prec->shell)), 0);
             hv_store(out, "homedir", strlen("homedir"), newSVpv(prec->homedir, strlen(prec->homedir)), 0);
-            out_ref = newRV_inc((SV *) out);
+            out_ref = newRV_noinc((SV *) out);
+        }
+
+        RETVAL = out_ref;
+    OUTPUT:
+        RETVAL        
+
+SV *
+group_get(service, pri_key)
+    DBNG::Service service
+    char *pri_key
+    CODE:
+        HV *out = newHV();
+        AV *members = newAV();
+        SV *out_ref = &PL_sv_undef;
+        KEY *key = service->new_key(service);
+        REC *rec = service->new_rec(service);
+        GROUP_REC *grec;
+        int i;
+
+        service->key_init(service, key, PRI, (void *) pri_key);
+        if(service->get(service, key, rec) == 0) {
+            grec = (GROUP_REC *) rec;
+            hv_store(out, "name", strlen("name"), newSVpv(grec->name, strlen(grec->name)), 0);
+            hv_store(out, "gid", strlen("gid"), newSVuv(grec->gid), 0);
+            hv_store(out, "passwd", strlen("passwd"), newSVpv(grec->passwd, strlen(grec->passwd)), 0);
+            hv_store(out, "members", strlen("members"), newRV_noinc((SV *) members), 0);
+
+            for(i = 0; i < grec->count; i++)
+                av_push(members, newSVpv(grec->members[i], strlen(grec->members[i])));
+
+            out_ref = newRV_noinc((SV *) out);
+        }
+
+        RETVAL = out_ref;
+    OUTPUT:
+        RETVAL        
+
+SV *
+shadow_get(service, pri_key)
+    DBNG::Service service
+    char *pri_key
+    CODE:
+        HV *out = newHV();
+        SV *out_ref = &PL_sv_undef;
+        KEY *key = service->new_key(service);
+        REC *rec = service->new_rec(service);
+        SHADOW_REC *srec;
+
+        service->key_init(service, key, PRI, (void *) pri_key);
+        if(service->get(service, key, rec) == 0) {
+            srec = (SHADOW_REC *) rec;
+            hv_store(out, "name", strlen("name"), newSVpv(srec->name, strlen(srec->name)), 0);
+            hv_store(out, "passwd", strlen("passwd"), newSVpv(srec->passwd, strlen(srec->passwd)), 0);
+            hv_store(out, "lstchg", strlen("lstchg"), newSVuv(srec->lstchg), 0);
+            hv_store(out, "min", strlen("min"), newSVuv(srec->min), 0);
+            hv_store(out, "max", strlen("max"), newSVuv(srec->max), 0);
+            hv_store(out, "warn", strlen("warn"), newSVuv(srec->warn), 0);
+            hv_store(out, "inact", strlen("inact"), newSVuv(srec->inact), 0);
+            hv_store(out, "expire", strlen("expire"), newSVuv(srec->expire), 0);
+            out_ref = newRV_noinc((SV *) out);
         }
 
         RETVAL = out_ref;
