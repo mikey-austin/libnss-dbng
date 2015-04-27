@@ -8,12 +8,10 @@
 #ifndef NSS_DB_NG_H
 #define NSS_DB_NG_H
 
-#define _GNU_SOURCE
-
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#  include <config.h>
 #else
-#error You must use autotools to build this!
+#  error You must use autotools to build this!
 #endif
 
 #include <nss.h>

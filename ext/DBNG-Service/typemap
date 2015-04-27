@@ -1,0 +1,5 @@
+DBNG::Service   	T_PTROBJ
+DBNG::Service::Passwd   T_PTROBJ
+DBNG::Service::Shadow 	T_PTROBJ
+DBNG::Service::Group 	T_PTROBJ
+enum TYPE       	T_ENUM

@@ -10,6 +10,7 @@
 #include <regex.h>
 
 #include "service-passwd.h"
+#include "dbng/utils.h"
 
 #define ERRBUFLEN 256
 #define NMATCH    7   /* A match per passwd column. */
