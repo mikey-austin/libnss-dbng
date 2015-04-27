@@ -14,6 +14,7 @@ In addition to the libnss functions, the following components are provided to ma
 
 * **libdbng** - Object-oriented library to manage service databases (and secondary indexes transparently).
 * **dbngctl** - Control program to allow administrators to manage service databases from the command line. Makes use of **libdbng**.
+* **DBNG::Service** - OO PERL extension which links against **libdbng**.
 
 ## Building
 
