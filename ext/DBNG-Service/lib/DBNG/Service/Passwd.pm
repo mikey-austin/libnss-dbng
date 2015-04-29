@@ -9,9 +9,4 @@ sub new {
     $class->SUPER::new(DBNG::Service::TYPE_PASSWD, $base);
 }
 
-sub get {
-    my ($self, $key) = @_;
-    $self->passwd_get($key);
-}
-
 1;

@@ -9,7 +9,7 @@
 #include <service-group.h>
 #include <service-shadow.h>
 
-typedef SERVICE * DBNG__Service;
+#include "utils.h"
 
 MODULE = DBNG::Service		PACKAGE = DBNG::Service		
     
@@ -58,8 +58,9 @@ void
 delete(service, pri_key)
     DBNG::Service service
     char *pri_key
-    CODE:
+    INIT:
         KEY *key = service->new_key(service);
+    CODE:
         service->key_init(service, key, PRI, (void *) pri_key);
         if(service->delete(service, key) != 0)
             croak("could not delete %s", pri_key);
@@ -69,11 +70,11 @@ void
 add(service, raw)
     DBNG::Service service
     char *raw
-    CODE:
+    INIT:
         KEY *key = service->new_key(service);
         REC *rec = service->new_rec(service);
         int ret;
-
+    CODE:
         if(!service->parse(service, raw, key, rec))
             croak("could not parse record");
 
@@ -87,95 +88,35 @@ add(service, raw)
         free(rec);
 
 SV *
-passwd_get(service, pri_key)
+get(service, pri_key)
     DBNG::Service service
     char *pri_key
-    CODE:
-        HV *out = newHV();
+    INIT:
         SV *out_ref = &PL_sv_undef;
         KEY *key = service->new_key(service);
-        REC *rec = service->new_rec(service);
-        PASSWD_REC *prec;
-
+        REC *rec = service->new_rec(service);        
+    CODE:
         service->key_init(service, key, PRI, (void *) pri_key);
-        if(service->get(service, key, rec) == 0) {
-            prec = (PASSWD_REC *) rec;
-            hv_store(out, "uid", strlen("uid"), newSVuv(prec->uid), 0);
-            hv_store(out, "gid", strlen("gid"), newSVuv(prec->gid), 0);
-            hv_store(out, "name", strlen("name"), newSVpv(prec->name, strlen(prec->name)), 0);
-            hv_store(out, "passwd", strlen("passwd"), newSVpv(prec->passwd, strlen(prec->passwd)), 0);
-            hv_store(out, "gecos", strlen("gecos"), newSVpv(prec->gecos, strlen(prec->gecos)), 0);
-            hv_store(out, "shell", strlen("shell"), newSVpv(prec->shell, strlen(prec->shell)), 0);
-            hv_store(out, "homedir", strlen("homedir"), newSVpv(prec->homedir, strlen(prec->homedir)), 0);
-            out_ref = newRV_noinc((SV *) out);
-        }
+        if(service->get(service, key, rec) == 0)
+            out_ref = format_rec(rec);
         free(key);
         free(rec);
-
         RETVAL = out_ref;
     OUTPUT:
         RETVAL        
 
 SV *
-group_get(service, pri_key)
+next(service)
     DBNG::Service service
-    char *pri_key
-    CODE:
-        HV *out = newHV();
-        AV *members = newAV();
+    INIT:
         SV *out_ref = &PL_sv_undef;
         KEY *key = service->new_key(service);
-        REC *rec = service->new_rec(service);
-        GROUP_REC *grec;
-        int i;
-
-        service->key_init(service, key, PRI, (void *) pri_key);
-        if(service->get(service, key, rec) == 0) {
-            grec = (GROUP_REC *) rec;
-            hv_store(out, "name", strlen("name"), newSVpv(grec->name, strlen(grec->name)), 0);
-            hv_store(out, "gid", strlen("gid"), newSVuv(grec->gid), 0);
-            hv_store(out, "passwd", strlen("passwd"), newSVpv(grec->passwd, strlen(grec->passwd)), 0);
-            hv_store(out, "members", strlen("members"), newRV_noinc((SV *) members), 0);
-
-            for(i = 0; i < grec->count; i++)
-                av_push(members, newSVpv(grec->members[i], strlen(grec->members[i])));
-
-            out_ref = newRV_noinc((SV *) out);
-        }
-        free(key);
-        free(rec);
-
-        RETVAL = out_ref;
-    OUTPUT:
-        RETVAL        
-
-SV *
-shadow_get(service, pri_key)
-    DBNG::Service service
-    char *pri_key
+        REC *rec = service->new_rec(service);        
     CODE:
-        HV *out = newHV();
-        SV *out_ref = &PL_sv_undef;
-        KEY *key = service->new_key(service);
-        REC *rec = service->new_rec(service);
-        SHADOW_REC *srec;
-
-        service->key_init(service, key, PRI, (void *) pri_key);
-        if(service->get(service, key, rec) == 0) {
-            srec = (SHADOW_REC *) rec;
-            hv_store(out, "name", strlen("name"), newSVpv(srec->name, strlen(srec->name)), 0);
-            hv_store(out, "passwd", strlen("passwd"), newSVpv(srec->passwd, strlen(srec->passwd)), 0);
-            hv_store(out, "lstchg", strlen("lstchg"), newSViv(srec->lstchg), 0);
-            hv_store(out, "min", strlen("min"), newSViv(srec->min), 0);
-            hv_store(out, "max", strlen("max"), newSViv(srec->max), 0);
-            hv_store(out, "warn", strlen("warn"), newSViv(srec->warn), 0);
-            hv_store(out, "inact", strlen("inact"), newSViv(srec->inact), 0);
-            hv_store(out, "expire", strlen("expire"), newSViv(srec->expire), 0);
-            out_ref = newRV_noinc((SV *) out);
-        }
+        if(service->next(service, key, rec) == 0)
+            out_ref = format_rec(rec);
         free(key);
         free(rec);
-
         RETVAL = out_ref;
     OUTPUT:
         RETVAL        

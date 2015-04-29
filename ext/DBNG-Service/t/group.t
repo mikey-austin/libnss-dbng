@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Env qw(TEST_BASE);
 
-use Test::More tests => 14;
+use Test::More tests => 19;
 BEGIN {
     use_ok('DBNG::Service');
     use_ok('DBNG::Service::Group');
@@ -33,3 +33,19 @@ foreach my $member (sort { $a cmp $b } @{$res->{members}}) {
 $group->delete('lock');
 $res = $group->get('lock');
 is($res, undef);
+
+$group->add('lock:x:10000:mikey,dexter,gordon');
+$group->add('key:x:10000:');
+$group->add('you:x:10000:another,group,member,list');
+$group->add('me:x:10000:apache,list');
+
+my %seen;
+while($res = $group->next) {
+    $seen{$res->{name}}++;
+}
+
+is(keys %seen, 4, 'iterations ok');
+is($seen{lock}, 1);
+is($seen{key}, 1);
+is($seen{you}, 1);
+is($seen{me}, 1);

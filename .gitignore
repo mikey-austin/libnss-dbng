@@ -41,7 +41,7 @@ check/test_*
 !check/test_*.in
 dbngctl
 libnss-dbng-*/
-ext/DBNG-Service/*.c
+ext/DBNG-Service/Service.c
 ext/DBNG-Service/Makefile.old
 ext/DBNG-Service/Makefile
 ext/DBNG-Service/blib*

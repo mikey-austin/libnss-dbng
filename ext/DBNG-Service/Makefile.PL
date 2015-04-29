@@ -8,4 +8,5 @@ WriteMakefile(
     LIBS         => ['-L../../lib/.libs -L/usr/lib -L/usr/local/lib -ldbng'],
     DEFINE       => '-DHAVE_CONFIG_H -DHAVE_DB_H',
     INC          => '-I. -I../../lib -I/usr/include/dbng -I/usr/local/include',
+    OBJECT       => '$(O_FILES)',
     );

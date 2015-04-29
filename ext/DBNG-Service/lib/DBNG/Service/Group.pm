@@ -9,9 +9,4 @@ sub new {
     $class->SUPER::new(DBNG::Service::TYPE_GROUP, $base);
 }
 
-sub get {
-    my ($self, $key) = @_;
-    $self->group_get($key);
-}
-
 1;
