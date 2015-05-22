@@ -16,3 +16,6 @@ t/group.t
 t/passwd.t
 t/shadow.t
 typemap
+utils.c
+utils.h
+utils.o

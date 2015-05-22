@@ -1,8 +1,18 @@
+.Passwd.c.swp
 Changes
+lib/DBNG/Service.pm
+lib/DBNG/Service/Group.pm
+lib/DBNG/Service/Passwd.pm
+lib/DBNG/Service/Shadow.pm
 Makefile.PL
-MANIFEST
+MANIFEST			This list of files
 ppport.h
 README
+Service.bs
+Service.c
+Service.o
 Service.xs
-t/DBNG-Service.t
-lib/DBNG/Service.pm
+t/group.t
+t/passwd.t
+t/shadow.t
+typemap

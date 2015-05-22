@@ -153,37 +153,57 @@ parse(SERVICE *service, const char *raw, KEY *key, REC *rec)
             p_buf += (len + 1);
         }
 
-        /* Count the number of members by counting the number of commas. */
-        grec->count = (strlen(raw + matches[4].rm_so) > 0 ? 1 : 0);
-        c_buf = strchr(raw + matches[4].rm_so, ',');
-        while(c_buf != NULL) {
-            grec->count++;
-            c_buf = strchr(++c_buf, ',');
+        /*
+         * Sanitize the members string my removing preceding/trailing commas & empty
+         * entries.
+         */
+        const char *raw_members = raw + matches[4].rm_so;
+        int raw_members_len = strlen(raw_members), seen_member = 0, j;
+        char safe_members[raw_members_len + 1];
+
+        memset(safe_members, 0, raw_members_len + 1);
+        for(i = 0, j = 0; i < raw_members_len; i++) {
+            if(raw_members[i] == ',') {
+                if(i == 0 || raw_members[i - 1] == ',' || !seen_member)
+                    continue;
+            }
+            else if(i > 0) {
+                seen_member = 1;
+            }
+            safe_members[j++] = raw_members[i];
         }
 
-        len = ((grec->count + 1) * sizeof(char *));
-        remaining -= len;
-        if(grec->count > 0 && remaining > 0) {
-            /* Reserve space for pointers. */
-            grec->members = (char **) p_buf;
-            p_buf += len;
+        safe_members[j] = '\0';
+        if(j > 0 && safe_members[j - 1] == ',')
+            safe_members[j - 1] = '\0';
 
-            /* Copy the actual strings. */
-            len = strlen(raw + matches[4].rm_so);
-            char members[len + 1];
-            strcpy(members, raw + matches[4].rm_so);
-            members[len] = '\0';
+        /* Count the number of members by counting the number of commas. */
+        grec->count = (strlen(safe_members) > 0 ? 1 : 0);
+        if(grec->count > 0) {
+            c_buf = strchr(safe_members, ',');
+            while(c_buf != NULL) {
+                grec->count++;
+                c_buf = strchr(++c_buf, ',');
+            }
 
-            for(i = 0, member = strtok(members, ",");
-                remaining > 0 && i < grec->count && member != NULL;
-                i++, member = strtok(NULL, ","))
-            {
-                grec->members[i] = p_buf;
-                strcpy(p_buf, member);
-                len = strlen(member);
-                p_buf[len] = '\0';
-                p_buf += (len + 1);
-                remaining -= (len + 1);
+            len = ((grec->count + 1) * sizeof(char *));
+            remaining -= len;
+            if(grec->count > 0 && remaining > 0) {
+                /* Reserve space for pointers. */
+                grec->members = (char **) p_buf;
+                p_buf += len;
+
+                for(i = 0, member = strtok(safe_members, ",");
+                    remaining > 0 && i < grec->count && member != NULL;
+                    i++, member = strtok(NULL, ","))
+                {
+                    grec->members[i] = p_buf;
+                    strcpy(p_buf, member);
+                    len = strlen(member);
+                    p_buf[len] = '\0';
+                    p_buf += (len + 1);
+                    remaining -= (len + 1);
+                }
             }
         }
 

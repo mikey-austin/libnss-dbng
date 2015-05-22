@@ -264,6 +264,70 @@ main(int argc, char *argv[])
         goto err;
     }
 
+    /* Test the record parsing. */
+    GROUP_KEY k;    
+    GROUP_REC r;    
+    memset(&k, 0, sizeof(k));
+    memset(&r, 0, sizeof(r));
+
+    if(!(group.parse(&group, "testgroup:x:9393:,,testmember1,,,tm2,,,", (struct KEY *) &k, (struct REC *) &r) > 0
+         && group.set(&group, (struct KEY *) &k, (struct REC *) &r) == 0))
+    {
+        _result = FAIL;
+        warnx("could not parse and insert record");
+        goto err;
+    }
+
+    if(r.count != 2) {
+        _result = FAIL;
+        warnx("group members is %d, expecting %d", r.count, 2);
+        goto err;
+    }
+
+    if(strcmp(r.members[0], "testmember1")) {
+        _result = FAIL;
+        warnx("group member incorrect, expecting \"testmember1\"");
+        goto err;
+    }
+
+    if(strcmp(r.members[1], "tm2")) {
+        _result = FAIL;
+        warnx("group member incorrect, expecting \"tm2\"");
+        goto err;
+    }
+
+    /* Test empty group members. */
+    memset(&k, 0, sizeof(k));
+    memset(&r, 0, sizeof(r));
+
+    if(!(group.parse(&group, "testgroup:x:9393:,,,,,,,,", (struct KEY *) &k, (struct REC *) &r) > 0
+         && group.set(&group, (struct KEY *) &k, (struct REC *) &r) == 0))
+    {
+        _result = FAIL;
+        warnx("could not parse and insert record");
+        goto err;
+    }
+
+    if(r.count != 0) {
+        _result = FAIL;
+        warnx("group members is supposed to be empty");
+        goto err;
+    }
+
+    if(!(group.parse(&group, "testgroup:x:9393:,a,b,c,d,e,f,g,", (struct KEY *) &k, (struct REC *) &r) > 0
+         && group.set(&group, (struct KEY *) &k, (struct REC *) &r) == 0))
+    {
+        _result = FAIL;
+        warnx("could not parse and insert record");
+        goto err;
+    }
+
+    if(r.count != 7) {
+        _result = FAIL;
+        warnx("expecting 7 group members");
+        goto err;
+    }
+
     service_cleanup(&group);
 
 err:
